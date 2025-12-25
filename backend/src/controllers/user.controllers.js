@@ -3,6 +3,7 @@ import { ApiError } from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {User} from "../models/user.models.js"
 import jwt from "jsonwebtoken"
+import mongoose from "mongoose"
 
 const generateAccessAndRefreshToken=async (userId)=>{
 try {

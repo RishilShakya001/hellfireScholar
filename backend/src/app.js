@@ -47,7 +47,7 @@ app.use("/api/v1/attendance",attendanceRouter)
 app.use("/api/v1/assignment",assignmentRouter)
 app.use("/api/v1/studyplan",studyPlanRouter)
 
-app.use("api/v1/analytics",analyticsRouter)
+app.use("/api/v1/analytics",analyticsRouter)
 
-app.use("api/v1/note",noteRouter)
+app.use("/api/v1/note",noteRouter)
 export {app}

@@ -7,7 +7,7 @@ const router=Router()
 //secure 
 router.route("/create").post(verifyJWT,createStudyPlan)
 
-router.route("/").get(verifyJWT,getStudyPlan)
+router.route("/getstudyp").get(verifyJWT,getStudyPlan)
 router.route("/generate").post(verifyJWT,generateStudyPlanDays)
 router.route("/update").patch(verifyJWT,updateStudyPlan)
 
