@@ -28,8 +28,8 @@ export default function Overview() {
             </button>
 
             <button
-              disabled
-              className="px-6 py-3 rounded-lg border border-sky-600 text-sky-600 font-semibold cursor-not-allowed"
+              onClick={() => navigate("/login")}
+              className="px-6 py-3 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition"
             >
               Login / Signup
             </button>
@@ -112,4 +112,3 @@ function Stat({ label, value }) {
     </div>
   );
 }
- 
