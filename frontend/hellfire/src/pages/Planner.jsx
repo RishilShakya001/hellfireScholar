@@ -45,12 +45,8 @@ export default function Planner() {
               }`}
             >
               <div className="flex items-center gap-4">
-                <span className="font-bold text-sky-700">
-                  {item.day}
-                </span>
-                <span className="text-gray-700">
-                  {item.task}
-                </span>
+                <span className="font-bold text-sky-700">{item.day}</span>
+                <span className="text-gray-700">{item.task}</span>
               </div>
 
               {item.highlight && (

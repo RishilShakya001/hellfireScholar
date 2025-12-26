@@ -6,6 +6,9 @@ import Dashboard from "./components/Dashboard";
 import Syllabus from "./pages/Syllabus";
 import Assignments from "./pages/Assignments";
 import Planner from "./pages/Planner";
+import Attendance from "./pages/Attendance";
+import ProgressAnalytics from "./pages/progressAnalytics";
+import Notes from "./pages/Notes";
 
 export default function App() {
   return (
@@ -23,8 +26,14 @@ export default function App() {
               <Routes>
                 <Route path="" element={<Dashboard />} />
                 <Route path="syllabus" element={<Syllabus />} />
+                <Route path="attendance" element={<Attendance />} />
                 <Route path="assignments" element={<Assignments />} />
                 <Route path="planner" element={<Planner />} />
+                <Route
+                  path="progress-analytics"
+                  element={<ProgressAnalytics />}
+                />
+                <Route path="notes" element={<Notes />} />
               </Routes>
             </main>
           </div>

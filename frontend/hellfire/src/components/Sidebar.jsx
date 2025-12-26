@@ -23,12 +23,23 @@ export default function Sidebar() {
           Syllabus
         </NavLink>
 
+        <NavLink to="/dashboard/notes" className={linkClass}>
+          Notes
+        </NavLink>
+        <NavLink to="/dashboard/attendance" className={linkClass}>
+          Attendance
+        </NavLink>
+
         <NavLink to="/dashboard/assignments" className={linkClass}>
           Assignments
         </NavLink>
 
         <NavLink to="/dashboard/planner" className={linkClass}>
           Planner
+        </NavLink>
+
+        <NavLink to="/dashboard/progress-analytics" className={linkClass}>
+          Progress Analytics
         </NavLink>
       </nav>
     </aside>
