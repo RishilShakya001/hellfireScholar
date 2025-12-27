@@ -32,6 +32,16 @@ export default function Assignments() {
     },
   ]);
 
+  const [showForm, setShowForm] = useState(false);
+
+  const [newTask, setNewTask] = useState({
+    subject: "",
+    title: "",
+    type: "Assignment",
+    deadline: "",
+    status: "Pending",
+  });
+
   const toggleStatus = (index) => {
     const updated = [...tasks];
     if (updated[index].status === "Pending") {
@@ -66,14 +76,112 @@ export default function Assignments() {
     }
   };
 
+  const handleAddTask = () => {
+    if (!newTask.subject || !newTask.title || !newTask.deadline) return;
+
+    setTasks([...tasks, newTask]);
+    setNewTask({
+      subject: "",
+      title: "",
+      type: "Assignment",
+      deadline: "",
+      status: "Pending",
+    });
+    setShowForm(false);
+  };
+
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold text-sky-800">
-        Assignments & Quizzes
-      </h1>
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold text-sky-800">
+          Assignments & Quizzes
+        </h1>
 
+        <button
+          onClick={() => setShowForm(!showForm)}
+          className="bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition"
+        >
+          ➕ Add Assignment
+        </button>
+      </div>
+
+      {/* Add Assignment Form */}
+      {showForm && (
+        <div className="bg-white p-5 rounded-xl shadow space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <input
+              type="text"
+              placeholder="Subject"
+              className="border p-2 rounded"
+              value={newTask.subject}
+              onChange={(e) =>
+                setNewTask({ ...newTask, subject: e.target.value })
+              }
+            />
+
+            <input
+              type="text"
+              placeholder="Title"
+              className="border p-2 rounded"
+              value={newTask.title}
+              onChange={(e) =>
+                setNewTask({ ...newTask, title: e.target.value })
+              }
+            />
+
+            <select
+              className="border p-2 rounded"
+              value={newTask.type}
+              onChange={(e) =>
+                setNewTask({ ...newTask, type: e.target.value })
+              }
+            >
+              <option>Assignment</option>
+              <option>Quiz</option>
+            </select>
+
+            <input
+              type="date"
+              className="border p-2 rounded"
+              value={newTask.deadline}
+              onChange={(e) =>
+                setNewTask({ ...newTask, deadline: e.target.value })
+              }
+            />
+
+            <select
+              className="border p-2 rounded col-span-2"
+              value={newTask.status}
+              onChange={(e) =>
+                setNewTask({ ...newTask, status: e.target.value })
+              }
+            >
+              <option>Pending</option>
+              <option>Done</option>
+              <option>Missing</option>
+            </select>
+          </div>
+
+          <div className="flex gap-3">
+            <button
+              onClick={handleAddTask}
+              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            >
+              Save
+            </button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Table */}
       <div className="bg-white rounded-xl shadow p-6">
-        {/* Table Header */}
         <div className="grid grid-cols-5 font-semibold text-sky-700 border-b pb-2 mb-3">
           <span>Subject</span>
           <span>Task</span>
@@ -82,7 +190,6 @@ export default function Assignments() {
           <span>Status</span>
         </div>
 
-        {/* Rows */}
         {tasks.map((task, index) => (
           <div
             key={index}
