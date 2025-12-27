@@ -39,7 +39,7 @@ const Attendance = () => {
           value={newSubject}
           onChange={(e) => setNewSubject(e.target.value)}
           placeholder="Enter subject name"
-          className="border p-2 flex-grow rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border p-2  flex-grow rounded-l focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button
           onClick={addSubject}
