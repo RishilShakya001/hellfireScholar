@@ -33,6 +33,7 @@ const ProgressAnalytics = () => {
     subject: "",
     confidence: 5
   });
+  const [openUnitsIndex, setOpenUnitsIndex] = useState(null);
 
   // Fetch analytics on component mount
   useEffect(() => {
@@ -225,6 +226,18 @@ const ProgressAnalytics = () => {
         </div>
       </div>
 
+      {/* Subjects list (scrollable) */}
+      <div className="bg-white p-4 rounded-lg shadow mb-8 max-h-40 overflow-auto">
+        <h3 className="text-lg font-semibold mb-3">Subjects</h3>
+        <div className="flex flex-wrap gap-2">
+          {(analytics.subjects && analytics.subjects.length ? analytics.subjects : [...new Set([...(analytics.strongTopics||[]).map(t=>t.subject), ...(analytics.weakTopics||[]).map(t=>t.subject)])]).map((s, i) => (
+            <span key={i} className="px-3 py-1 bg-sky-100 text-sky-800 rounded-full text-sm">
+              {s.name || s}
+            </span>
+          ))}
+        </div>
+      </div>
+
       {/* Add Topic Form */}
       <div className="bg-white p-6 rounded-lg shadow mb-8">
         <h3 className="text-xl font-semibold mb-4">Add Topic</h3>
@@ -261,14 +274,17 @@ const ProgressAnalytics = () => {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
               </label>
-              <input
-                type="text"
+              <select
                 value={topicForm.subject}
                 onChange={(e) => setTopicForm({...topicForm, subject: e.target.value})}
                 className="w-full p-2 border rounded"
-                placeholder="e.g., Mathematics"
                 required
-              />
+              >
+                <option value="">Select subject</option>
+                {((analytics.subjects && analytics.subjects.length) ? analytics.subjects : [...new Set([...(analytics.strongTopics||[]).map(t=>t.subject), ...(analytics.weakTopics||[]).map(t=>t.subject)])]).map((s, i) => (
+                  <option key={i} value={s.name || s}>{s.name || s}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -302,23 +318,52 @@ const ProgressAnalytics = () => {
           {analytics.strongTopics.length === 0 ? (
             <p className="text-gray-500">No strong topics added yet</p>
           ) : (
-            <ul className="space-y-2">
-              {analytics.strongTopics.map((topic, index) => (
-                <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
-                  <div>
-                    <span className="font-medium">{topic.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">({topic.subject})</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteTopic(topic._id, 'strong')}
-                    className="text-red-500 hover:text-red-700"
-                    title="Delete topic"
-                  >
-                    🗑️
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="max-h-64 overflow-auto pr-2">
+              <ul className="space-y-2">
+                {analytics.strongTopics.map((topic, index) => (
+                  <li key={index} className="relative flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                    <div className="flex items-center gap-3">
+                      <div className="max-w-[320px] overflow-x-auto whitespace-nowrap text-ellipsis">
+                        <span className="font-medium block">{topic.name}</span>
+                        <span className="text-sm text-gray-500">{`(${topic.subject})`}</span>
+                      </div>
+                      <button
+                        className="text-sm text-sky-600 hover:underline"
+                        onClick={() => setOpenUnitsIndex(openUnitsIndex === index ? null : index)}
+                        type="button"
+                      >
+                        Units ▾
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDeleteTopic(topic._id, 'strong')}
+                        className="text-red-500 hover:text-red-700"
+                        title="Delete topic"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+
+                    {openUnitsIndex === index && (
+                      <div className="absolute right-0 top-full z-10 mt-2 bg-white border rounded shadow max-h-40 overflow-auto p-3 w-64">
+                        {(() => {
+                          const s = analytics.syllabi?.find(x => x.subjectName === topic.subject) || null;
+                          if (!s || !s.units || !s.units.length) return <div className="text-sm text-gray-500">No units found</div>;
+                          return (
+                            <ul className="space-y-2">
+                              {s.units.map(u => (
+                                <li key={u.id} className="text-sm">{u.title} {u.completed ? '✅' : ''}</li>
+                              ))}
+                            </ul>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
 
@@ -328,23 +373,52 @@ const ProgressAnalytics = () => {
           {analytics.weakTopics.length === 0 ? (
             <p className="text-gray-500">No weak topics added yet</p>
           ) : (
-            <ul className="space-y-2">
-              {analytics.weakTopics.map((topic, index) => (
-                <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
-                  <div>
-                    <span className="font-medium">{topic.name}</span>
-                    <span className="text-sm text-gray-500 ml-2">({topic.subject})</span>
-                  </div>
-                  <button
-                    onClick={() => handleDeleteTopic(topic._id, 'weak')}
-                    className="text-red-500 hover:text-red-700"
-                    title="Delete topic"
-                  >
-                    🗑️
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="max-h-64 overflow-auto pr-2">
+              <ul className="space-y-2">
+                {analytics.weakTopics.map((topic, index) => (
+                  <li key={index} className="relative flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                    <div className="flex items-center gap-3">
+                      <div className="max-w-[320px] overflow-x-auto whitespace-nowrap text-ellipsis">
+                        <span className="font-medium block">{topic.name}</span>
+                        <span className="text-sm text-gray-500">{`(${topic.subject})`}</span>
+                      </div>
+                      <button
+                        className="text-sm text-sky-600 hover:underline"
+                        onClick={() => setOpenUnitsIndex(openUnitsIndex === index ? null : index)}
+                        type="button"
+                      >
+                        Units ▾
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleDeleteTopic(topic._id, 'weak')}
+                        className="text-red-500 hover:text-red-700"
+                        title="Delete topic"
+                      >
+                        🗑️
+                      </button>
+                    </div>
+
+                    {openUnitsIndex === index && (
+                      <div className="absolute right-0 top-full z-10 mt-2 bg-white border rounded shadow max-h-40 overflow-auto p-3 w-64">
+                        {(() => {
+                          const s = analytics.syllabi?.find(x => x.subjectName === topic.subject) || null;
+                          if (!s || !s.units || !s.units.length) return <div className="text-sm text-gray-500">No units found</div>;
+                          return (
+                            <ul className="space-y-2">
+                              {s.units.map(u => (
+                                <li key={u.id} className="text-sm">{u.title} {u.completed ? '✅' : ''}</li>
+                              ))}
+                            </ul>
+                          )
+                        })()}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       </div>

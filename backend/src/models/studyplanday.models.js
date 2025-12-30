@@ -22,6 +22,14 @@ const StudyPlanDaySchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+      highlight: {
+        type: Boolean,
+        default: false,
+      },
+      completed: {
+        type: Boolean,
+        default: false,
+      },
   },
   { timestamps: true }
 );

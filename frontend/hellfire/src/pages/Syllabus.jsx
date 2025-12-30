@@ -181,7 +181,8 @@ export default function Syllabus() {
       )}
 
       {/* SUBJECT CARDS */}
-      {subjects.map((subject) => (
+      <div className="space-y-4 max-h-[60vh] overflow-auto pr-2">
+        {subjects.map((subject) => (
         <div
           key={subject._id}
           className="bg-white rounded-xl shadow p-6 max-w-3xl"
@@ -204,7 +205,7 @@ export default function Syllabus() {
           {/* UNITS */}
           {syllabus?.subjectId?._id === subject._id && (
             <>
-              <div className="space-y-2 mb-5">
+              <div className="space-y-2 mb-5 max-h-56 overflow-auto pr-2">
                 {units.map((unit) => (
                   <div
                     key={unit._id}
@@ -217,7 +218,7 @@ export default function Syllabus() {
                       <span className="text-lg">
                         {unit.completed ? "✅" : "⬜"}
                       </span>
-                      <span>{unit.title}</span>
+                      <span className="break-words">{unit.title}</span>
                     </div>
 
                     <button
@@ -242,7 +243,8 @@ export default function Syllabus() {
             </>
           )}
         </div>
-      ))}
+        ))}
+      </div>
     </div>
   );
 }

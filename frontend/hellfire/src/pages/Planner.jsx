@@ -1,26 +1,13 @@
 import { useEffect, useState } from "react";
 import api from "../config/api";
+import { fetchStudyPlanProgress } from "../services/analyticsApi";
 
 export default function Planner() {
-  const [plan, setPlan] = useState([
-    { day: "Day 1", task: "Math – Unit 3 + PYQs", highlight: true },
-    { day: "Day 2", task: "Physics – Electrostatics", highlight: false },
-    { day: "Day 3", task: "CS – DBMS", highlight: false },
-    { day: "Day 4", task: "Math – Integrals", highlight: false },
-    { day: "Day 5", task: "Chemistry – Thermodynamics", highlight: false },
-    { day: "Day 6", task: "Physics – Current Electricity", highlight: false },
-    { day: "Day 7", task: "Weekly Revision + Test", highlight: true },
-    { day: "Day 8", task: "Math – Differential Equations", highlight: false },
-    { day: "Day 9", task: "CS – OS Basics", highlight: false },
-    { day: "Day 10", task: "Chemistry – Electrochemistry", highlight: false },
-    { day: "Day 11", task: "Physics – Magnetism", highlight: false },
-    { day: "Day 12", task: "Math – Probability", highlight: false },
-    { day: "Day 13", task: "Full Syllabus Revision", highlight: true },
-    { day: "Day 14", task: "Mock Test + Analysis", highlight: true },
-  ]);
+  const [plan, setPlan] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [editIndex, setEditIndex] = useState(null);
+  const [serverProgress, setServerProgress] = useState(null);
 
   const [newPlan, setNewPlan] = useState({
     day: "",
@@ -38,13 +25,23 @@ export default function Planner() {
       const res = await api.get("/studyplan/getstudyp");
       setPlan(
         res.data.data.days.map((d) => ({
+          id: d._id,
           day: `Day ${d.day}`,
           task: `${d.subject} – ${d.topic}`,
-          highlight: false,
+          highlight: d.highlight || false,
+          completed: d.completed || false,
         }))
       );
+
+      // fetch authoritative server progress
+      try {
+        const p = await fetchStudyPlanProgress();
+        setServerProgress(p.data.data || p.data);
+      } catch (pe) {
+        // ignore if progress endpoint not available
+      }
     } catch (err) {
-      // agar study plan nahi bana to create + generate
+      // if study plan doesn't exist, create + generate
       if (err.response?.status === 404) {
         await api.post("/studyplan/create", { durationDays: 14 });
         await api.post("/studyplan/generate");
@@ -53,24 +50,85 @@ export default function Planner() {
     }
   };
 
-  /* ---------------- ADD PLAN (MANUAL DAY) ---------------- */
-const addPlan = async () => {
-  if (!newPlan.day || !newPlan.task) return;
+  /* ---------------- ADD / EDIT PLAN (PERSISTED) ---------------- */
+  const addPlan = async () => {
+    if (!newPlan.day || !newPlan.task) return;
 
-    setPlan([...plan, newPlan]);
-    setNewPlan({ day: "", task: "", highlight: false });
-    setShowForm(false);
+    // Editing existing day
+    if (editIndex !== null) {
+      const id = plan[editIndex]?.id;
+      if (!id) return;
+      try {
+        await api.patch(`/studyplan/day/${id}`, {
+          day: newPlan.day,
+          task: newPlan.task,
+          highlight: newPlan.highlight,
+        });
+        await loadStudyPlan();
+        setNewPlan({ day: "", task: "", highlight: false });
+        setEditIndex(null);
+        setShowForm(false);
+      } catch (err) {
+        console.error(err);
+      }
+
+      return;
+    }
+
+    // Create new day
+    try {
+      await api.post("/studyplan/day", {
+        day: newPlan.day,
+        task: newPlan.task,
+        highlight: newPlan.highlight,
+      });
+
+      await loadStudyPlan();
+      setNewPlan({ day: "", task: "", highlight: false });
+      setShowForm(false);
+    } catch (err) {
+      // If study plan missing, create + generate then retry
+      if (err.response?.status === 404) {
+        try {
+          await api.post("/studyplan/create", { durationDays: 14 });
+          await api.post("/studyplan/generate");
+          await api.post("/studyplan/day", {
+            day: newPlan.day,
+            task: newPlan.task,
+            highlight: newPlan.highlight,
+          });
+          await loadStudyPlan();
+          setNewPlan({ day: "", task: "", highlight: false });
+          setShowForm(false);
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        console.error(err);
+      }
+    }
   };
 
-  const toggleComplete = (index) => {
-    const updatedPlan = [...plan];
-    updatedPlan[index].completed = !updatedPlan[index].completed;
-    setPlan(updatedPlan);
+  const toggleComplete = async (index) => {
+    const item = plan[index];
+    if (!item?.id) return;
+    try {
+      await api.patch(`/studyplan/day/${item.id}`, { completed: !item.completed });
+      await loadStudyPlan();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
-  const deletePlan = (index) => {
-    if (confirm("Are you sure you want to delete this plan?")) {
-      setPlan(plan.filter((_, i) => i !== index));
+  const deletePlan = async (index) => {
+    const item = plan[index];
+    if (!item?.id) return;
+    if (!confirm("Are you sure you want to delete this plan?")) return;
+    try {
+      await api.delete(`/studyplan/day/${item.id}`);
+      await loadStudyPlan();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -94,6 +152,8 @@ const addPlan = async () => {
   const totalCount = plan.length;
   const progressPercentage =
     totalCount > 0 ? (completedCount / totalCount) * 100 : 0;
+
+  const displayedPercentage = serverProgress?.percentage ?? progressPercentage;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-8">
@@ -126,13 +186,13 @@ const addPlan = async () => {
               Overall Progress
             </span>
             <span className="text-purple-600 text-lg">
-              {progressPercentage.toFixed(0)}%
+              {displayedPercentage.toFixed(0)}%
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
             <div
               className="bg-gradient-to-r from-blue-600 to-purple-600 h-4 rounded-full transition-all duration-500 shadow-sm"
-              style={{ width: `${progressPercentage}%` }}
+              style={{ width: `${displayedPercentage}%` }}
             ></div>
           </div>
         </div>

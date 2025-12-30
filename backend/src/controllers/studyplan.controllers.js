@@ -131,7 +131,6 @@ const addStudyPlanDay = asyncHandler(async (req, res) => {
     day: Number(day.replace("Day", "").trim()),
     subject: "Custom",
     topic: task,
-    highlight,
   });
 
   return res.status(201).json(
@@ -139,10 +138,97 @@ const addStudyPlanDay = asyncHandler(async (req, res) => {
   );
 });
 
+const updateStudyPlanDay = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { day, task, highlight, completed } = req.body;
+
+  const studyPlan = await StudyPlan.findOne({
+    userId: req.user._id,
+  });
+
+  if (!studyPlan) {
+    throw new ApiError(404, "Study plan not found");
+  }
+
+  const update = {};
+  if (day) update.day = Number(String(day).replace("Day", "").trim());
+  if (typeof task !== "undefined") update.topic = task;
+  if (typeof highlight !== "undefined") update.highlight = highlight;
+  if (typeof completed !== "undefined") update.completed = completed;
+
+  const planDay = await StudyPlanDay.findOneAndUpdate(
+    { _id: id, studyPlanId: studyPlan._id },
+    update,
+    { new: true }
+  );
+
+  if (!planDay) {
+    throw new ApiError(404, "Study plan day not found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, planDay, "Study plan day updated"));
+});
+
+const deleteStudyPlanDay = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const studyPlan = await StudyPlan.findOne({
+    userId: req.user._id,
+  });
+
+  if (!studyPlan) {
+    throw new ApiError(404, "Study plan not found");
+  }
+
+  const deleted = await StudyPlanDay.findOneAndDelete({ _id: id, studyPlanId: studyPlan._id });
+
+  if (!deleted) {
+    throw new ApiError(404, "Study plan day not found");
+  }
+
+  return res.status(200).json(new ApiResponse(200, deleted, "Study plan day deleted"));
+});
+
 
 export {createStudyPlan,
     getStudyPlan,
     generateStudyPlanDays,
     updateStudyPlan,
-    addStudyPlanDay
+  addStudyPlanDay,
+  updateStudyPlanDay,
+  deleteStudyPlanDay
 }
+
+const getStudyPlanProgress = asyncHandler(async (req, res) => {
+  const studyPlan = await StudyPlan.findOne({ userId: req.user._id });
+
+  if (!studyPlan) {
+    throw new ApiError(404, "Study plan not found");
+  }
+
+  const days = await StudyPlanDay.find({ studyPlanId: studyPlan._id }).lean();
+
+  const total = days.length;
+  const completed = days.filter((d) => d.completed).length;
+  const percentage = total ? Math.round((completed / total) * 100) : 0;
+
+  // breakdown by subject
+  const bySubject = {};
+  days.forEach((d) => {
+    const subj = d.subject || "Custom";
+    if (!bySubject[subj]) bySubject[subj] = { subject: subj, total: 0, completed: 0 };
+    bySubject[subj].total += 1;
+    if (d.completed) bySubject[subj].completed += 1;
+  });
+
+  const subjects = Object.values(bySubject).map((s) => ({
+    subject: s.subject,
+    total: s.total,
+    completed: s.completed,
+    completion: s.total ? Math.round((s.completed / s.total) * 100) : 0,
+  }));
+
+  return res.status(200).json(new ApiResponse(200, { total, completed, percentage, subjects }, "Study plan progress fetched"));
+});
+
+export { getStudyPlanProgress };

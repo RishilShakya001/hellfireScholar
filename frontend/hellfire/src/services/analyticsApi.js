@@ -17,3 +17,6 @@ export const deleteTopic = (category, topicId) =>
 // Update study hours
 export const updateStudyHours = (hours) => 
   api.patch("/analytics", { studyHours: hours });
+
+// Fetch study plan progress (total/completed/percentage + per-subject breakdown)
+export const fetchStudyPlanProgress = () => api.get("/studyplan/progress");
