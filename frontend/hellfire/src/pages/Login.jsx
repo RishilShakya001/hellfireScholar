@@ -1,11 +1,20 @@
 import React, { useState } from "react";
 import { Eye, EyeOff, BookOpen, Mail, Lock, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import api from "../config/api";
 
 export default function AuthPage() {
+  //forgot
+  const [forgot,setForgot]=useState(false)
+  const fo=()=>{
+        alert("This functionallity is not added");
+        setForgot(true)
+  }
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -13,10 +22,110 @@ export default function AuthPage() {
     confirmPassword: "",
   });
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData);
-    //alert(`${isLogin ? "Login" : "Sign Up"} successful! (Demo)`);
-    navigate("/dashboard");
+  const handleSubmit = async (e) => {
+    e?.preventDefault();
+    setError("");
+
+    // Validation
+    if (!formData.email || !formData.password) {
+      setError("Email and password are required");
+      return;
+    }
+
+
+    if (!isLogin) {
+      if (!formData.name) {
+        setError("Name is required");
+        return;
+      }
+      if (formData.password !== formData.confirmPassword) {
+        setError("Passwords do not match");
+        return;
+      }
+      if (formData.password.length < 6) {
+        setError("Password must be at least 6 characters");
+        return;
+      }
+    }
+
+    setLoading(true);
+if (loading) {
+    return (
+      <main className="flex-1 p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-gray-600">Loading dashboard...</div>
+        </div>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main className="flex-1 p-8">
+        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
+          {error}
+        </div>
+      </main>
+    );
+  }
+    try {
+      if (isLogin) {
+        // Login
+        const response = await api.post("/users/login", {
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (response.data.success) {
+          const { accessToken, refreshToken, user } = response.data.data;
+          
+          // Store tokens
+          localStorage.setItem("accessToken", accessToken);
+          if (refreshToken) {
+            localStorage.setItem("refreshToken", refreshToken);
+          }
+          localStorage.setItem("user", JSON.stringify(user));
+
+          // Navigate to dashboard
+          navigate("/dashboard");
+        }
+      } else {
+        // Register
+        const response = await api.post("/users/register", {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+        });
+
+        if (response.data.success) {
+          // Auto login after registration
+          const loginResponse = await api.post("/users/login", {
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (loginResponse.data.success) {
+            const { accessToken, refreshToken, user } = loginResponse.data.data;
+            
+            localStorage.setItem("accessToken", accessToken);
+            if (refreshToken) {
+              localStorage.setItem("refreshToken", refreshToken);
+            }
+            localStorage.setItem("user", JSON.stringify(user));
+
+            navigate("/dashboard");
+          }
+        }
+      }
+    } catch (err) {
+      const errorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        `${isLogin ? "Login" : "Registration"} failed. Please try again.`;
+      setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -165,7 +274,7 @@ export default function AuthPage() {
                   />
                   <span className="ml-2 text-gray-600">Remember me</span>
                 </label>
-                <button className="text-blue-600 hover:text-blue-700 font-medium">
+                <button onClick={fo} className="text-blue-600 hover:text-blue-700 font-medium" >
                   Forgot password?
                 </button>
               </div>
@@ -235,10 +344,8 @@ export default function AuthPage() {
           </p>
         </div>
 
-        {/* Note */}
-        <p className="text-center text-sm text-gray-500 mt-6">
-          Authentication coming soon
-        </p>
+        
+        
       </div>
     </div>
   );

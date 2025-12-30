@@ -1,77 +1,132 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+import {
+  getAllSubjects,
+  findOrCreateSubject,
+} from "../services/subjectApi.js";
+
+import {
+  createSyllabus,
+  getSyllabusBySubject,
+  getUnitBySubject,
+  
+  addUnit,
+  toggleUnit,
+  deleteUnit,
+  updateProgress,
+} from "../services/syllabusApi.js";
 
 export default function Syllabus() {
-  const [subjects, setSubjects] = useState([
-    {
-      subject: "Mathematics",
-      units: [
-        { name: "Limits & Continuity", done: true },
-        { name: "Differentiation", done: true },
-        { name: "Applications of Derivatives", done: false },
-        { name: "Integrals", done: false },
-      ],
-    },
-    {
-      subject: "Physics",
-      units: [
-        { name: "Kinematics", done: true },
-        { name: "Laws of Motion", done: false },
-        { name: "Work & Energy", done: false },
-      ],
-    },
-    {
-      subject: "Chemistry",
-      units: [
-        { name: "Atomic Structure", done: true },
-        { name: "Chemical Bonding", done: true },
-        { name: "Thermodynamics", done: false },
-      ],
-    },
-  ]);
+  /* ---------------- STATE ---------------- */
+  const [subjects, setSubjects] = useState([]);
+  const [syllabus, setSyllabus] = useState(null);
+  const [units, setUnits] = useState([]);
 
   const [showForm, setShowForm] = useState(false);
   const [newSubject, setNewSubject] = useState("");
-  const [units, setUnits] = useState([]);
   const [newUnit, setNewUnit] = useState("");
 
-  // Toggle unit completion
-  const toggleUnit = (subjectIndex, unitIndex) => {
-    const updated = [...subjects];
-    updated[subjectIndex].units[unitIndex].done =
-      !updated[subjectIndex].units[unitIndex].done;
-    setSubjects(updated);
+  const [loading, setLoading] = useState(false);
+
+  /* ---------------- LOAD SUBJECTS ---------------- */
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  const loadSubjects = async () => {
+    const res = await getAllSubjects();
+    console.log(res)
+    setSubjects(res.data.data);
   };
 
-  // Progress calculation
-  const calculateProgress = (units) => {
-    const completed = units.filter((u) => u.done).length;
-    return Math.round((completed / units.length) * 100);
+  /* ---------------- LOAD SYLLABUS + UNITS ---------------- */
+  const loadSyllabusData = async (subjectId) => {
+    setLoading(true);
+    try {
+      // syllabus
+      let sRes;
+      try {
+        sRes = await getSyllabusBySubject(subjectId);
+      } catch (err) {
+        if (err.response?.status === 404) {
+          sRes = await createSyllabus(subjectId);
+        } else throw err;
+      }
+
+      setSyllabus(sRes.data.data);
+
+      // units (IMPORTANT FIX)
+      const uRes = await getUnitBySubject(subjectId);
+      setUnits(uRes.data.data.units);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Add unit to form
-  const addUnit = () => {
-    if (!newUnit.trim()) return;
-    setUnits([...units, { name: newUnit, done: false }]);
-    setNewUnit("");
+  /* ---------------- SAVE SUBJECT + UNIT ---------------- */
+  const saveSubject = async () => {
+    if (!newSubject.trim() || !newUnit.trim()) {
+      alert("Subject and unit both required");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // 1️⃣ subject
+      const subjectRes = await findOrCreateSubject(newSubject);
+      console.log(subjectRes)
+      const subjectId = subjectRes.data.data._id;
+
+      // 2️⃣ syllabus
+      let sRes;
+      try {
+        sRes = await getSyllabusBySubject(subjectId);
+      } catch {
+        sRes = await createSyllabus(subjectId);
+      }
+
+      // 3️⃣ add unit
+      await addUnit(sRes.data.data._id, newUnit);
+
+      // 4️⃣ refresh
+      await loadSubjects();
+      await loadSyllabusData(subjectId);
+
+      setNewSubject("");
+      setNewUnit("");
+      setShowForm(false);
+    } catch {
+      alert("Save failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Save subject
-  const saveSubject = () => {
-    if (!newSubject || units.length === 0) return;
-
-    setSubjects([
-      ...subjects,
-      {
-        subject: newSubject,
-        units,
-      },
-    ]);
-
-    setNewSubject("");
-    setUnits([]);
-    setShowForm(false);
+  /* ---------------- TOGGLE UNIT ---------------- */
+  const toggleUnitUI = async (unitId) => {
+    await toggleUnit(unitId);
+    await updateProgress(syllabus._id);
+    await loadSyllabusData(syllabus.subjectId._id);
   };
 
+  /* ---------------- DELETE UNIT ---------------- */
+  const deleteUnitUI = async (unitId) => {
+    if (!window.confirm("Delete unit?")) return;
+
+    await deleteUnit(unitId);
+    await updateProgress(syllabus._id);
+    await loadSyllabusData(syllabus.subjectId._id);
+  };
+
+  /* ---------------- PROGRESS ---------------- */
+  const calculateProgress = () => {
+    if (!units.length) return 0;
+    const done = units.filter((u) => u.completed).length;
+    return Math.round((done / units.length) * 100);
+  };
+
+  /* ---------------- UI ---------------- */
   return (
     <div className="space-y-8">
       {/* Header */}
@@ -88,7 +143,7 @@ export default function Syllabus() {
         </button>
       </div>
 
-      {/* Add Subject Form */}
+      {/* ADD SUBJECT FORM */}
       {showForm && (
         <div className="bg-white p-6 rounded-xl shadow max-w-3xl space-y-4">
           <input
@@ -99,40 +154,21 @@ export default function Syllabus() {
             onChange={(e) => setNewSubject(e.target.value)}
           />
 
-          {/* Units */}
-          <div className="space-y-2">
-            {units.map((unit, i) => (
-              <div
-                key={i}
-                className="flex items-center justify-between bg-sky-50 px-3 py-2 rounded"
-              >
-                <span>{unit.name}</span>
-              </div>
-            ))}
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Add Unit"
-              className="border p-2 rounded flex-1"
-              value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value)}
-            />
-            <button
-              onClick={addUnit}
-              className="bg-sky-500 text-white px-4 rounded hover:bg-sky-600"
-            >
-              Add
-            </button>
-          </div>
+          <input
+            type="text"
+            placeholder="Add Unit"
+            className="border p-2 rounded w-full"
+            value={newUnit}
+            onChange={(e) => setNewUnit(e.target.value)}
+          />
 
           <div className="flex gap-3">
             <button
               onClick={saveSubject}
+              disabled={loading}
               className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
             >
-              Save Subject
+              {loading ? "Saving..." : "Save Subject"}
             </button>
             <button
               onClick={() => setShowForm(false)}
@@ -144,48 +180,69 @@ export default function Syllabus() {
         </div>
       )}
 
-      {/* Existing Subjects */}
-      {subjects.map((subject, subjectIndex) => {
-        const progress = calculateProgress(subject.units);
-
-        return (
+      {/* SUBJECT CARDS */}
+      {subjects.map((subject) => (
+        <div
+          key={subject._id}
+          className="bg-white rounded-xl shadow p-6 max-w-3xl"
+        >
           <div
-            key={subject.subject}
-            className="bg-white rounded-xl shadow p-6 max-w-3xl"
+            className="flex justify-between items-center mb-4 cursor-pointer"
+            onClick={() => loadSyllabusData(subject._id)}
           >
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold text-sky-700">
-                {subject.subject}
-              </h2>
-              <span className="font-semibold">{progress}%</span>
-            </div>
-
-            <div className="space-y-2 mb-5">
-              {subject.units.map((unit, unitIndex) => (
-                <div
-                  key={unit.name}
-                  onClick={() =>
-                    toggleUnit(subjectIndex, unitIndex)
-                  }
-                  className="flex items-center gap-3 cursor-pointer select-none text-gray-700"
-                >
-                  <span className="text-lg">
-                    {unit.done ? "✅" : "⬜"}
-                  </span>
-                  <span>{unit.name}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="w-full bg-sky-100 h-3 rounded-full">
-              <div
-                className="bg-sky-500 h-3 rounded-full transition-all"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
+            <h2 className="text-xl font-semibold text-sky-700">
+              {subject.name}
+            </h2>
+            <span className="font-semibold">
+              {syllabus?.subjectId?._id === subject._id
+                ? calculateProgress()
+                : 0}
+              %
+            </span>
           </div>
-        );
-      })}
+
+          {/* UNITS */}
+          {syllabus?.subjectId?._id === subject._id && (
+            <>
+              <div className="space-y-2 mb-5">
+                {units.map((unit) => (
+                  <div
+                    key={unit._id}
+                    className="flex items-center justify-between gap-3 text-gray-700"
+                  >
+                    <div
+                      onClick={() => toggleUnitUI(unit._id)}
+                      className="flex items-center gap-3 cursor-pointer"
+                    >
+                      <span className="text-lg">
+                        {unit.completed ? "✅" : "⬜"}
+                      </span>
+                      <span>{unit.title}</span>
+                    </div>
+
+                    <button
+                      onClick={() => deleteUnitUI(unit._id)}
+                      className="text-red-600 hover:text-red-800"
+                    >
+                      Delete
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* PROGRESS BAR */}
+              <div className="w-full bg-sky-100 h-3 rounded-full">
+                <div
+                  className="bg-sky-500 h-3 rounded-full transition-all"
+                  style={{
+                    width: `${calculateProgress()}%`,
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      ))}
     </div>
   );
 }

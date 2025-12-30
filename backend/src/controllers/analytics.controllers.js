@@ -1,56 +1,117 @@
-import {asyncHandler} from "../utils/asyncHandler.js"
-import { ApiError } from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import {Analytics} from "../models/analytics.models.js"
- const getUserAnalytics = asyncHandler(async (req, res) => {
-  let analytics = await Analytics.findOne({
-    userId: req.user._id,
-  });
+import Analytics from "../models/analytics.models.js";
 
-  // Auto-create analytics if not exists
-  if (!analytics) {
-    analytics = await Analytics.create({
-      userId: req.user._id,
-      syllabusCompletion: 0,
-      studyStreakDays: 0,
-      weakTopics: "",
-      strongTopics: "",
-    });
+// Get user's analytics
+export const getUserAnalytics = async (req, res) => {
+  try {
+    let analytics = await Analytics.findOne({ user: req.user._id })
+      .populate('user', 'name email')
+      .lean();
+
+    if (!analytics) {
+      // Create new analytics document if it doesn't exist
+      analytics = await Analytics.create({ 
+        user: req.user._id,
+        syllabusCompletion: 0,
+        strongTopics: [],
+        weakTopics: [],
+        studyHours: 0,
+        streakData: [],
+      });
+    }
+
+    res.status(200).json(analytics);
+  } catch (error) {
+    console.error("Error fetching analytics:", error);
+    res.status(500).json({ message: "Failed to fetch analytics" });
   }
+};
 
-  return res.status(200).json(
-    new ApiResponse(200, analytics, "User analytics fetched successfully")
-  );
-});
+// Update analytics
+export const updateAnalytics = async (req, res) => {
+  try {
+    const { strongTopics, weakTopics, studyHours, streakData } = req.body;
+    const updateData = { lastUpdated: new Date() };
 
+    if (strongTopics) updateData.strongTopics = strongTopics;
+    if (weakTopics) updateData.weakTopics = weakTopics;
+    if (studyHours !== undefined) updateData.studyHours = studyHours;
+    if (streakData) updateData.streakData = streakData;
 
-const updateAnalytics = asyncHandler(async (req, res) => {
-  const {
-    syllabusCompletion,
-    studyStreakDays,
-    weakTopics,
-    strongTopics,
-  } = req.body;
+    const analytics = await Analytics.findOneAndUpdate(
+      { user: req.user._id },
+      { $set: updateData },
+      { new: true, upsert: true }
+    );
 
-  const analytics = await Analytics.findOneAndUpdate(
-    { userId: req.user._id },
-    {
-      $set: {
-        ...(syllabusCompletion !== undefined && { syllabusCompletion }),
-        ...(studyStreakDays !== undefined && { studyStreakDays }),
-        ...(weakTopics !== undefined && { weakTopics }),
-        ...(strongTopics !== undefined && { strongTopics }),
-        updatedAt: new Date(),
+    // Update completion percentage
+    await analytics.updateSyllabusCompletion();
+
+    res.status(200).json(analytics);
+  } catch (error) {
+    console.error("Error updating analytics:", error);
+    res.status(500).json({ message: "Failed to update analytics" });
+  }
+};
+
+// Add a topic
+export const addTopic = async (req, res) => {
+  try {
+    const { category, name, subject, confidence } = req.body;
+    const field = category === 'strong' ? 'strongTopics' : 'weakTopics';
+    
+    const topic = {
+      name,
+      subject,
+      confidence: confidence || 5,
+      dateAdded: new Date()
+    };
+
+    const analytics = await Analytics.findOneAndUpdate(
+      { user: req.user._id },
+      { 
+        $push: { [field]: topic },
+        $set: { lastUpdated: new Date() }
       },
-    },
-    { new: true, upsert: true }
-  );
+      { new: true, upsert: true }
+    );
 
-  return res.status(200).json(
-    new ApiResponse(200, analytics, "Analytics updated successfully")
-  );
-});
+    // Update completion percentage
+    await analytics.updateSyllabusCompletion();
 
-export{getUserAnalytics,
-    updateAnalytics
-}
+    res.status(200).json(analytics);
+  } catch (error) {
+    console.error("Error adding topic:", error);
+    res.status(500).json({ message: "Failed to add topic" });
+  }
+};
+
+// Delete a topic
+export const deleteTopic = async (req, res) => {
+  try {
+    const { topicId, category } = req.params;
+    const field = category === 'strong' ? 'strongTopics' : 'weakTopics';
+
+    const analytics = await Analytics.findOneAndUpdate(
+      { user: req.user._id },
+      { 
+        $pull: { [field]: { _id: topicId } },
+        $set: { lastUpdated: new Date() }
+      },
+      { new: true }
+    );
+
+    if (!analytics) {
+      return res.status(404).json({ message: "Analytics not found" });
+    }
+
+    // Update completion percentage
+    await analytics.updateSyllabusCompletion();
+
+    res.status(200).json(analytics);
+  } catch (error) {
+    console.error("Error deleting topic:", error);
+    res.status(500).json({ message: "Failed to delete topic" });
+  }
+};
+
+

@@ -1,34 +1,51 @@
 import mongoose from "mongoose";
 
-const AnalyticsSchema = new mongoose.Schema(
+const analyticsSchema = new mongoose.Schema(
   {
-    userId: {
+    user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+      unique: true,
     },
-
     syllabusCompletion: {
       type: Number,
       default: 0,
+      min: 0,
+      max: 100,
     },
-
-    studyStreakDays: {
-      type: Number,
-      default: 0,
-    },
-
-    weakTopics: {
-      type: [String],
-      default: [],
-    },
-
-    strongTopics: {
-      type: [String],
-      default: [],
-    },
+    strongTopics: [
+      {
+        name: { type: String, required: true },
+        subject: { type: String, required: true },
+        confidence: { type: Number, min: 1, max: 10, default: 5 },
+        dateAdded: { type: Date, default: Date.now },
+      },
+    ],
+    weakTopics: [
+      {
+        name: { type: String, required: true },
+        subject: { type: String, required: true },
+        confidence: { type: Number, min: 1, max: 10, default: 5 },
+        dateAdded: { type: Date, default: Date.now },
+      },
+    ],
+    studyHours: { type: Number, default: 0, min: 0 },
+    streakData: [{ date: { type: Date, default: Date.now }, hours: Number }],
+    lastUpdated: { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-export const Analytics= mongoose.model("Analytics", AnalyticsSchema);
+// Add methods here if needed
+analyticsSchema.methods.updateSyllabusCompletion = async function() {
+  // Your logic to calculate completion percentage
+  // This is a placeholder - adjust based on your needs
+  this.syllabusCompletion = Math.min(100, this.strongTopics.length * 5); // Example calculation
+  await this.save();
+  return this;
+};
+
+const Analytics = mongoose.model("Analytics", analyticsSchema);
+
+export default Analytics;

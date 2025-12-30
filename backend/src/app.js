@@ -6,7 +6,7 @@ const app = express()
 app.use(
     cors(
         {
-            origin:process.env.CORS_ORIGIN,
+            origin:process.env.CORS_ORIGIN || "http://localhost:5173",
             credentials:true
         }
     )
@@ -50,4 +50,16 @@ app.use("/api/v1/studyplan",studyPlanRouter)
 app.use("/api/v1/analytics",analyticsRouter)
 
 app.use("/api/v1/note",noteRouter)
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  if (err) {
+    res.status(err.statusCode || 500).json({
+      success: false,
+      message: err.message || "Internal Server Error",
+      ...(process.env.NODE_ENV === "development" && { stack: err.stack }),
+    });
+  }
+});
+
 export {app}

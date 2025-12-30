@@ -51,9 +51,16 @@ const getAttendanceBySubject=asyncHandler(async(req,res)=>{
     userId
   }).populate("subjectId", "name");
 
-  if (!attendance) {
-    throw new ApiError(404, "Attendance not found");
-  }
+if (!attendance) {
+  attendance = await Attendance.create({
+    userId,
+    subjectId,
+    attended: 0,
+    total: 0,
+    percentage: 0,
+  });
+}
+
 
   return res.status(200).json(
     new ApiResponse(200, attendance, "Attendance fetched successfully")

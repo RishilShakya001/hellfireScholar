@@ -1,7 +1,44 @@
+import mongoose from "mongoose";
+
 import {asyncHandler} from "../utils/asyncHandler.js"
 import { ApiError } from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {Subject} from "../models/subject.models.js"
+const findOrCreateSubject = asyncHandler(async (req, res) => {
+  const { name } = req.body;
+
+  if (!name || !name.trim()) {
+    throw new ApiError(400, "Subject name is required");
+  }
+
+  // ✅ SAFE USER ID
+  const userId = req.user?._id || req.user?.id;
+
+  if (!userId) {
+    throw new ApiError(401, "User not authenticated");
+  }
+
+  const subjectName = name.trim().toLowerCase();
+
+  // 🔍 Try to find existing subject
+  let subject = await Subject.findOne({
+    userId,
+    name: subjectName,
+  });
+
+  // ➕ Create if not found
+  if (!subject) {
+    subject = await Subject.create({
+      userId,
+      name: subjectName,
+    });
+  }
+
+  return res.status(200).json(
+    new ApiResponse(200, subject, "Subject ready")
+  );
+});
+
 const createSubject=asyncHandler(async(req,res)=>{
   const {name}=req.body;
   if(!name?.trim()){
@@ -12,7 +49,7 @@ const createSubject=asyncHandler(async(req,res)=>{
 const subject = await Subject.create({
 
     userId: req.user._id,
-    name,
+    name:name.trim().toLowerCase(),
   });
 
   return res.status(201).json(
@@ -163,7 +200,7 @@ const getSubjectAttendance=asyncHandler(async(req,res)=>{
  });
 
  return res.status(200).json(
-    new ApiResponse(200,attendance,"Attendance fetched")
+    new ApiResponse(200,attendance||{},"Attendance fetched")
  );
 })
 
@@ -189,4 +226,5 @@ export {createSubject,
     getSubjectNotes,
     getSubjectAttendance,
     getSubjectUnits
+    ,findOrCreateSubject
 }

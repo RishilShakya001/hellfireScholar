@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-
+import previewImg from "../images/ChatGPT Image Dec 27, 2025, 02_54_52 PM.png";
 export default function Overview() {
   const navigate = useNavigate();
 
@@ -20,12 +20,12 @@ export default function Overview() {
           </p>
 
           <div className="mt-8 flex gap-4">
-            <button
+            {/* <button
               onClick={() => navigate("/dashboard")}
               className="px-6 py-3 rounded-lg bg-sky-600 text-white font-semibold hover:bg-sky-700 transition"
             >
               Explore Dashboard
-            </button>
+            </button> */}
 
             <button
               onClick={() => navigate("/login")}
@@ -35,18 +35,21 @@ export default function Overview() {
             </button>
           </div>
 
-          <p className="text-sm text-gray-500 mt-2">
+          {/* <p className="text-sm text-gray-500 mt-2">
             Authentication coming soon
-          </p>
+          </p> */}
         </div>
 
         {/* Right Visual */}
         <div className="relative">
           <div className="absolute -top-6 -left-6 w-72 h-72 bg-sky-100 rounded-full blur-3xl" />
-          <div className="relative bg-white rounded-2xl shadow-xl p-6 space-y-4">
-            <Stat label="Syllabus Completed" value="65%" />
-            <Stat label="Assignments Pending" value="2" />
-            <Stat label="Attendance" value="72%" />
+          <div className="relative bg-white rounded-2xl shadow-xl p-6 space-y-4" >
+               <img
+  src={previewImg}
+  alt="Preview"
+  className="w-full h-52 object-cover rounded-2xl transition-all duration-500 hover:scale-105 hover:brightness-90"
+/>
+            
           </div>
         </div>
       </section>

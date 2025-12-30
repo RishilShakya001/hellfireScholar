@@ -28,7 +28,8 @@ const getAssignmentsBySubject=asyncHandler(async(req,res)=>{
   const assignments = await Assignment.find({
     userId: req.user._id,
     subjectId,
-  }).sort({ deadline: 1 });
+  }).populate("subjectId","name")
+  .sort({ deadline: 1 });
 
   return res.status(200).json(
     new ApiResponse(200, assignments, "Assignments fetched successfully")
@@ -55,7 +56,7 @@ const updateAssignmentStatus=asyncHandler(async(req,res)=>{
      const { assignmentId } = req.params;
   const { status } = req.body;
 
-  if (!["pending", "completed", "missing"].includes(status)) {
+  if (!["pending", "done", "missing"].includes(status)) {
     throw new ApiError(400, "Invalid status value");
   }
 

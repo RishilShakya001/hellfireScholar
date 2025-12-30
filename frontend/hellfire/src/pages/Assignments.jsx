@@ -1,94 +1,121 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  createAssignment,
+  getAssignmentsBySubject,
+  updateAssignmentStatus,
+  deleteAssignment,
+} from "../services/assignmentApi";
+import { getAllSubjects, findOrCreateSubject } from "../services/subjectApi";
 
 export default function Assignments() {
-  const [tasks, setTasks] = useState([
-    {
-      subject: "Mathematics",
-      title: "HW 4",
-      type: "Assignment",
-      deadline: "Oct 10",
-      status: "Pending",
-    },
-    {
-      subject: "Physics",
-      title: "Quiz 2",
-      type: "Quiz",
-      deadline: "Oct 12",
-      status: "Done",
-    },
-    {
-      subject: "Computer Science",
-      title: "Lab Work",
-      type: "Assignment",
-      deadline: "Oct 14",
-      status: "Missing",
-    },
-    {
-      subject: "Mathematics",
-      title: "Quiz 3",
-      type: "Quiz",
-      deadline: "Oct 16",
-      status: "Pending",
-    },
-  ]);
+  const [tasks, setTasks] = useState([]);
+  const [subjects, setSubjects] = useState([]);
+  const [activeSubjectId, setActiveSubjectId] = useState(null);
 
   const [showForm, setShowForm] = useState(false);
 
   const [newTask, setNewTask] = useState({
     subject: "",
     title: "",
-    type: "Assignment",
+    type: "assignment",
     deadline: "",
-    status: "Pending",
+    status: "pending",
   });
 
-  const toggleStatus = (index) => {
-    const updated = [...tasks];
-    if (updated[index].status === "Pending") {
-      updated[index].status = "Done";
-    } else if (updated[index].status === "Done") {
-      updated[index].status = "Missing";
-    } else {
-      updated[index].status = "Pending";
-    }
-    setTasks(updated);
+  /* ---------- LOAD SUBJECTS ---------- */
+  useEffect(() => {
+    loadSubjects();
+  }, []);
+
+  const loadSubjects = async () => {
+    const res = await getAllSubjects();
+    setSubjects(res.data.data);
   };
 
-  const statusStyle = (status) => {
-    switch (status) {
-      case "Done":
-        return "text-green-600";
-      case "Missing":
-        return "text-red-500";
-      default:
-        return "text-yellow-500";
+  /* ---------- SET DEFAULT ACTIVE SUBJECT ---------- */
+  useEffect(() => {
+    if (subjects.length > 0) {
+      setActiveSubjectId(subjects[0]._id);
     }
+  }, [subjects]);
+
+  /* ---------- LOAD ASSIGNMENTS WHEN SUBJECT CHANGES ---------- */
+  useEffect(() => {
+    if (activeSubjectId) {
+      loadAssignments(activeSubjectId);
+    }
+  }, [activeSubjectId]);
+
+  const loadAssignments = async (subjectId) => {
+    const res = await getAssignmentsBySubject(subjectId);
+    setTasks(res.data.data);
   };
 
-  const statusIcon = (status) => {
-    switch (status) {
-      case "Done":
-        return "✅";
-      case "Missing":
-        return "❌";
-      default:
-        return "⏳";
-    }
-  };
+  /* ---------- ADD ASSIGNMENT ---------- */
+  const handleAddTask = async () => {
+    const { subject, title, deadline, type } = newTask;
+    if (!subject || !title || !deadline) return;
 
-  const handleAddTask = () => {
-    if (!newTask.subject || !newTask.title || !newTask.deadline) return;
+    // find or create subject
+    const subjectRes = await findOrCreateSubject(subject);
+    const subjectId = subjectRes.data.data._id;
 
-    setTasks([...tasks, newTask]);
+    // create assignment
+    await createAssignment({
+      subjectId,
+      title,
+      type,
+      deadline,
+    });
+
+    // refresh
+    setActiveSubjectId(subjectId);
+    setShowForm(false);
     setNewTask({
       subject: "",
       title: "",
-      type: "Assignment",
+      type: "assignment",
       deadline: "",
-      status: "Pending",
+      status: "pending",
     });
-    setShowForm(false);
   };
+
+  /* ---------- TOGGLE STATUS ---------- */
+  const toggleStatus = async (task) => {
+  let nextStatus;
+
+  switch (task.status) {
+    case "pending":
+      nextStatus = "done";
+      break;
+    case "done":
+      nextStatus = "missing";
+      break;
+    default:
+      nextStatus = "pending";
+  }
+
+  await updateAssignmentStatus(task._id, nextStatus);
+  await loadAssignments(activeSubjectId);
+};
+
+  /* ---------- DELETE ---------- */
+  const removeTask = async (id) => {
+    if (!window.confirm("Delete assignment?")) return;
+    await deleteAssignment(id);
+    await loadAssignments(activeSubjectId);
+  };
+
+  /* ---------- UI HELPERS ---------- */
+  const statusStyle = (status) =>
+    status === "done"
+      ? "text-green-600"
+      : status === "missing"
+      ? "text-red-500"
+      : "text-yellow-500";
+
+  const statusIcon = (status) =>
+    status === "done" ? "✅" : status === "missing" ? "❌" : "⏳";
 
   return (
     <div className="space-y-6">
@@ -100,13 +127,33 @@ export default function Assignments() {
 
         <button
           onClick={() => setShowForm(!showForm)}
-          className="bg-sky-600 text-white px-4 py-2 rounded-lg hover:bg-sky-700 transition"
+          className="bg-sky-600 text-white px-4 py-2 rounded-lg"
         >
           ➕ Add Assignment
         </button>
       </div>
 
-      {/* Add Assignment Form */}
+
+{/* SUBJECT FILTER DROPDOWN */}
+<div className="max-w-xs">
+  <label className="block mb-1 font-semibold text-gray-700">
+    Filter by Subject
+  </label>
+  <select
+    value={activeSubjectId || ""}
+    onChange={(e) => setActiveSubjectId(e.target.value)}
+    className="w-full border p-2 rounded focus:ring-2 focus:ring-sky-500"
+  >
+    <option value="">Select Subject</option>
+    {subjects.map((sub) => (
+      <option key={sub._id} value={sub._id}>
+        {sub.name}
+      </option>
+    ))}
+  </select>
+</div>
+
+      {/* FORM */}
       {showForm && (
         <div className="bg-white p-5 rounded-xl shadow space-y-4">
           <div className="grid grid-cols-2 gap-4">
@@ -137,8 +184,9 @@ export default function Assignments() {
                 setNewTask({ ...newTask, type: e.target.value })
               }
             >
-              <option>Assignment</option>
-              <option>Quiz</option>
+              <option value="assignment">Assignment</option>
+              <option value="quiz">Quiz</option>
+              <option value="lab">Lab</option>
             </select>
 
             <input
@@ -149,30 +197,18 @@ export default function Assignments() {
                 setNewTask({ ...newTask, deadline: e.target.value })
               }
             />
-
-            <select
-              className="border p-2 rounded col-span-2"
-              value={newTask.status}
-              onChange={(e) =>
-                setNewTask({ ...newTask, status: e.target.value })
-              }
-            >
-              <option>Pending</option>
-              <option>Done</option>
-              <option>Missing</option>
-            </select>
           </div>
 
           <div className="flex gap-3">
             <button
               onClick={handleAddTask}
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+              className="bg-green-600 text-white px-4 py-2 rounded"
             >
               Save
             </button>
             <button
               onClick={() => setShowForm(false)}
-              className="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400"
+              className="bg-gray-300 px-4 py-2 rounded"
             >
               Cancel
             </button>
@@ -180,9 +216,9 @@ export default function Assignments() {
         </div>
       )}
 
-      {/* Table */}
+      {/* TABLE */}
       <div className="bg-white rounded-xl shadow p-6">
-        <div className="grid grid-cols-5 font-semibold text-sky-700 border-b pb-2 mb-3">
+        <div className="grid grid-cols-5 font-semibold border-b pb-2 mb-3">
           <span>Subject</span>
           <span>Task</span>
           <span>Type</span>
@@ -190,31 +226,39 @@ export default function Assignments() {
           <span>Status</span>
         </div>
 
-        {tasks.map((task, index) => (
+        {tasks.map((task) => (
           <div
-            key={index}
-            onClick={() => toggleStatus(index)}
-            className="grid grid-cols-5 items-center py-3 border-b last:border-b-0 cursor-pointer hover:bg-sky-50 transition"
+            key={task._id}
+            className="grid grid-cols-5 py-3 border-b items-center"
           >
-            <span>{task.subject}</span>
-            <span className="font-medium">{task.title}</span>
-            <span className="text-gray-600">{task.type}</span>
-            <span>{task.deadline}</span>
+            <span>{task.subjectId?.name}</span>
+            <span>{task.title}</span>
+            <span>{task.type}</span>
+            <span>{task.deadline.slice(0, 10)}</span>
 
             <span
-              className={`flex items-center gap-2 font-semibold ${statusStyle(
+              onClick={() => toggleStatus(task)}
+              className={`cursor-pointer flex items-center gap-2 ${statusStyle(
                 task.status
               )}`}
             >
               {statusIcon(task.status)} {task.status}
+
+              <button
+  onClick={(e) => {
+    e.stopPropagation();
+    removeTask(task._id);
+  }}
+  className="ml-3 p-1.5 rounded-full text-red-500 hover:bg-red-100 hover:text-red-700 transition"
+  title="Delete assignment"
+>
+  Delete
+</button>
+
             </span>
           </div>
         ))}
       </div>
-
-      <p className="text-sm text-gray-500">
-        💡 Tip: Click on any task to change its status
-      </p>
     </div>
   );
 }

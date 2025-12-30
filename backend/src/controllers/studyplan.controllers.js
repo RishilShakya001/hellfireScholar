@@ -111,8 +111,38 @@ const updateStudyPlan = asyncHandler(async (req, res) => {
   );
 });
 
+const addStudyPlanDay = asyncHandler(async (req, res) => {
+  const { day, task, highlight = false } = req.body;
+
+  if (!day || !task) {
+    throw new ApiError(400, "Day and task are required");
+  }
+
+  const studyPlan = await StudyPlan.findOne({
+    userId: req.user._id,
+  });
+
+  if (!studyPlan) {
+    throw new ApiError(404, "Study plan not found");
+  }
+
+  const planDay = await StudyPlanDay.create({
+    studyPlanId: studyPlan._id,
+    day: Number(day.replace("Day", "").trim()),
+    subject: "Custom",
+    topic: task,
+    highlight,
+  });
+
+  return res.status(201).json(
+    new ApiResponse(201, planDay, "Study plan day added")
+  );
+});
+
+
 export {createStudyPlan,
     getStudyPlan,
     generateStudyPlanDays,
-    updateStudyPlan
+    updateStudyPlan,
+    addStudyPlanDay
 }

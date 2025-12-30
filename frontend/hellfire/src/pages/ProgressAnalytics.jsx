@@ -1,411 +1,377 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
-  PieChart,
-  Pie,
-  Cell,
-  Tooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Legend,
+  PieChart, Pie, Cell, Tooltip, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, ResponsiveContainer, Legend
 } from "recharts";
+import { 
+  fetchAnalytics, 
+  addTopic, 
+  deleteTopic,
+  updateStudyHours 
+} from "../services/analyticsApi";
+import { toast } from "react-toastify";
+
+const COLORS = ["#6a11cb", "#2575fc", "#ff6b6b", "#4CAF50"];
 
 const ProgressAnalytics = () => {
-  // Syllabus completion data
-  const syllabusData = [
-    { name: "Completed", value: 65 },
-    { name: "Remaining", value: 35 },
-  ];
-  const COLORS = ["#6a11cb", "#2575fc"];
-
-  // Strong & weak topics
-  const [strongTopics, setStrongTopics] = useState([
-    "Physics - Unit 1",
-    "Maths - Unit 4",
-  ]);
-  const [weakTopics, setWeakTopics] = useState([
-    "Chemistry - Unit 3",
-    "Biology - Unit 5",
-  ]);
-
-  // UI view mode: addition | strong | weak
-  const [view, setView] = useState("addition");
-
-  // Form data for adding topics
-  const [topicForm, setTopicForm] = useState({
-    category: "strong",
-    subject: "",
-    chapter: "",
+  const [analytics, setAnalytics] = useState({
+    syllabusCompletion: 0,
+    strongTopics: [],
+    weakTopics: [],
+    studyHours: 0,
+    streakData: [],
+    lastUpdated: null
   });
 
-  // Handle adding a new topic
-  const handleAddTopic = () => {
-    if (!topicForm.subject.trim() || !topicForm.chapter.trim()) {
-      alert("Please fill in both subject and topic/chapter");
-      return;
-    }
-
-    const fullTopic = `${topicForm.subject.trim()} - ${topicForm.chapter.trim()}`;
-
-    if (topicForm.category === "strong") {
-      setStrongTopics([...strongTopics, fullTopic]);
-    } else {
-      setWeakTopics([...weakTopics, fullTopic]);
-    }
-
-    // Reset form
-    setTopicForm({ category: "strong", subject: "", chapter: "" });
-  };
-
-  // Handle removing a topic
-  const handleRemoveTopic = (index, type) => {
-    if (type === "strong") {
-      setStrongTopics(strongTopics.filter((_, i) => i !== index));
-    } else {
-      setWeakTopics(weakTopics.filter((_, i) => i !== index));
-    }
-  };
-
-  // Study streak data with numerical scale (1-7)
-  const [streakData, setStreakData] = useState([
-    { day: "1", hrs: 2 },
-    { day: "2", hrs: 3 },
-    { day: "3", hrs: 1 },
-    { day: "4", hrs: 4 },
-    { day: "5", hrs: 2 },
-    { day: "6", hrs: 5 },
-    { day: "7", hrs: 0 },
-  ]);
-
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [hours, setHours] = useState("");
 
-  // Calculate average hours with error handling
-  const avgHours =
-    streakData.length > 0
-      ? (
-          streakData.reduce((a, b) => a + (b.hrs || 0), 0) / streakData.length
-        ).toFixed(1)
-      : "0.0";
+  const [topicForm, setTopicForm] = useState({
+    category: "strong",
+    name: "",
+    subject: "",
+    confidence: 5
+  });
 
-  // Add hours with validation
-  const addHours = () => {
-    const numHours = Number(hours);
+  // Fetch analytics on component mount
+  useEffect(() => {
+    const loadAnalytics = async () => {
+      try {
+        setLoading(true);
+        const response = await fetchAnalytics();
+        setAnalytics(response.data);
+      } catch (err) {
+        console.error("Failed to load analytics:", err);
+        toast.error("Failed to load analytics data");
+        setError("Failed to load analytics");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    // Validate input
-    if (hours === "" || isNaN(numHours) || numHours < 0 || numHours > 24) {
-      alert("Please enter a valid number between 0 and 24");
+    loadAnalytics();
+  }, []);
+
+  // Handle topic submission
+  const handleTopicSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await addTopic(topicForm);
+      setAnalytics(response.data);
+      setTopicForm({
+        category: "strong",
+        name: "",
+        subject: "",
+        confidence: 5
+      });
+      toast.success("Topic added successfully");
+    } catch (err) {
+      console.error("Failed to add topic:", err);
+      toast.error("Failed to add topic");
+    }
+  };
+
+  // Handle topic deletion
+  const handleDeleteTopic = async (topicId, category) => {
+    if (!window.confirm(`Are you sure you want to delete this ${category} topic?`)) return;
+    
+    try {
+      const response = await deleteTopic(category, topicId);
+      setAnalytics(response.data);
+      toast.success("Topic deleted successfully");
+    } catch (err) {
+      console.error("Failed to delete topic:", err);
+      toast.error("Failed to delete topic");
+    }
+  };
+
+  // Handle study hours update
+  const handleAddHours = async () => {
+    if (!hours || isNaN(hours) || hours <= 0) {
+      toast.error("Please enter a valid number of hours");
       return;
     }
 
-    // Get the last day number and calculate next day (1-7 cycle)
-    const lastDay = parseInt(streakData[streakData.length - 1].day);
-    const nextDay = lastDay >= 7 ? 1 : lastDay + 1;
-
-    // Update streak data (remove oldest, add newest)
-    const updated = [
-      ...streakData.slice(1),
-      { day: nextDay.toString(), hrs: numHours },
-    ];
-
-    setStreakData(updated);
-    setHours("");
-  };
-
-  // Custom tooltip for pie chart
-  const CustomTooltip = ({ active, payload }) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-2 border border-gray-300 rounded shadow">
-          <p className="font-semibold">{payload[0].name}</p>
-          <p className="text-blue-600">{payload[0].value}%</p>
-        </div>
-      );
+    try {
+      const response = await updateStudyHours(analytics.studyHours + Number(hours));
+      setAnalytics(response.data);
+      setHours("");
+      toast.success("Study hours updated successfully");
+    } catch (err) {
+      console.error("Failed to update study hours:", err);
+      toast.error("Failed to update study hours");
     }
-    return null;
   };
+
+  // Calculate chart data
+  const getChartData = () => {
+    const subjects = [...new Set([
+      ...analytics.strongTopics.map(t => t.subject),
+      ...analytics.weakTopics.map(t => t.subject)
+    ])];
+
+    return subjects.map(subject => {
+      const strongCount = analytics.strongTopics.filter(
+        t => t.subject === subject
+      ).length;
+      const weakCount = analytics.weakTopics.filter(
+        t => t.subject === subject
+      ).length;
+      return { subject, strong: strongCount, weak: weakCount };
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sky-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-10">
+        <p className="text-red-500">{error}</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="mt-4 bg-sky-600 text-white px-4 py-2 rounded"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto bg-gradient-to-br from-blue-50 to-purple-50 min-h-screen">
-      <h1 className="text-2xl sm:text-3xl font-bold mb-6 text-blue-700 text-center">
-        📊 Progress Analytics
-      </h1>
-
-      {/* SYLLABUS COMPLETION */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="text-2xl">📚</span>
-          Syllabus Completion
-        </h2>
-
-        <div className="flex flex-col items-center">
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={syllabusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}%`}
-              >
-                {syllabusData.map((entry, index) => (
-                  <Cell
-                    key={`cell-${index}`}
-                    fill={COLORS[index % COLORS.length]}
-                  />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
-
-          <div className="mt-4 text-center">
-            <p className="text-3xl font-bold text-purple-600">65%</p>
-            <p className="text-gray-600">Syllabus Completed</p>
+    <div className="p-6 max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold text-sky-800 mb-8">Progress Analytics</h1>
+      
+      {/* Stats Overview */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Syllabus Completion</h3>
+          <div className="text-3xl font-bold text-sky-600">
+            {analytics.syllabusCompletion}%
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Study Hours</h3>
+          <div className="text-3xl font-bold text-purple-600">
+            {analytics.studyHours} hrs
+          </div>
+        </div>
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-semibold mb-2">Current Streak</h3>
+          <div className="text-3xl font-bold text-green-600">
+            {analytics.streakData.length} days
           </div>
         </div>
       </div>
 
-      {/* TOPIC ANALYSIS */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="text-2xl">🎯</span>
-          Topic Analysis
-        </h2>
-
-        {/* Tabs */}
-        <div className="flex flex-wrap gap-2 sm:gap-3 mb-4">
-          <button
-            onClick={() => setView("addition")}
-            className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-              view === "addition"
-                ? "bg-blue-600 text-white shadow-md"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            ➕ Add Topic
-          </button>
-          <button
-            onClick={() => setView("strong")}
-            className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-              view === "strong"
-                ? "bg-green-600 text-white shadow-md"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            💪 Strong ({strongTopics.length})
-          </button>
-          <button
-            onClick={() => setView("weak")}
-            className={`px-3 py-2 rounded-lg font-semibold transition-all ${
-              view === "weak"
-                ? "bg-red-600 text-white shadow-md"
-                : "bg-gray-200 hover:bg-gray-300"
-            }`}
-          >
-            📝 Weak ({weakTopics.length})
-          </button>
+      {/* Charts */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+        {/* Topics by Subject */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Topics by Subject</h3>
+          <div className="h-80">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={getChartData()}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="subject" />
+                <YAxis />
+                <Tooltip />
+                <Legend />
+                <Bar dataKey="strong" name="Strong Topics" fill="#6a11cb" />
+                <Bar dataKey="weak" name="Weak Topics" fill="#2575fc" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
         </div>
 
-        {/* Addition Form */}
-        {view === "addition" && (
-          <div className="space-y-3">
+        {/* Strong vs Weak Topics */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Topics Overview</h3>
+          <div className="h-80 flex items-center justify-center">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Strong Topics', value: analytics.strongTopics.length },
+                    { name: 'Weak Topics', value: analytics.weakTopics.length }
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={80}
+                  dataKey="value"
+                  label={({ name, percent }) => 
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {[0, 1].map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={COLORS[index % COLORS.length]} 
+                    />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      </div>
+
+      {/* Add Topic Form */}
+      <div className="bg-white p-6 rounded-lg shadow mb-8">
+        <h3 className="text-xl font-semibold mb-4">Add Topic</h3>
+        <form onSubmit={handleTopicSubmit} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Category
               </label>
               <select
                 value={topicForm.category}
-                onChange={(e) =>
-                  setTopicForm({ ...topicForm, category: e.target.value })
-                }
-                className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => setTopicForm({...topicForm, category: e.target.value})}
+                className="w-full p-2 border rounded"
+                required
               >
-                <option value="strong">💪 Strong Topic</option>
-                <option value="weak">📝 Weak Topic</option>
+                <option value="strong">Strong Topic</option>
+                <option value="weak">Weak Topic</option>
               </select>
             </div>
-
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Topic Name
+              </label>
+              <input
+                type="text"
+                value={topicForm.name}
+                onChange={(e) => setTopicForm({...topicForm, name: e.target.value})}
+                className="w-full p-2 border rounded"
+                placeholder="e.g., Linear Algebra"
+                required
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Subject
               </label>
               <input
                 type="text"
-                placeholder="e.g., Physics, Chemistry, Maths"
                 value={topicForm.subject}
-                onChange={(e) =>
-                  setTopicForm({ ...topicForm, subject: e.target.value })
-                }
-                className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                onChange={(e) => setTopicForm({...topicForm, subject: e.target.value})}
+                className="w-full p-2 border rounded"
+                placeholder="e.g., Mathematics"
+                required
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Topic / Chapter
+                Confidence (1-10)
               </label>
               <input
-                type="text"
-                placeholder="e.g., Unit 1, Thermodynamics"
-                value={topicForm.chapter}
-                onChange={(e) =>
-                  setTopicForm({ ...topicForm, chapter: e.target.value })
-                }
-                onKeyPress={(e) => e.key === "Enter" && handleAddTopic()}
-                className="border border-gray-300 p-2 w-full rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                type="number"
+                min="1"
+                max="10"
+                value={topicForm.confidence}
+                onChange={(e) => setTopicForm({...topicForm, confidence: e.target.value})}
+                className="w-full p-2 border rounded"
+                required
               />
             </div>
-
-            <button
-              onClick={handleAddTopic}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg w-full font-semibold transition-colors shadow-md"
-            >
-              Add Topic
-            </button>
           </div>
-        )}
-
-        {/* Strong Topics List */}
-        {view === "strong" && (
-          <div>
-            {strongTopics.length > 0 ? (
-              <ul className="space-y-2">
-                {strongTopics.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between bg-green-50 p-3 rounded-lg border border-green-200"
-                  >
-                    <span className="text-green-700 font-medium">✓ {item}</span>
-                    <button
-                      onClick={() => handleRemoveTopic(i, "strong")}
-                      className="text-red-500 hover:text-red-700 font-bold"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No strong topics added yet
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Weak Topics List */}
-        {view === "weak" && (
-          <div>
-            {weakTopics.length > 0 ? (
-              <ul className="space-y-2">
-                {weakTopics.map((item, i) => (
-                  <li
-                    key={i}
-                    className="flex items-center justify-between bg-red-50 p-3 rounded-lg border border-red-200"
-                  >
-                    <span className="text-red-700 font-medium">⚠ {item}</span>
-                    <button
-                      onClick={() => handleRemoveTopic(i, "weak")}
-                      className="text-red-500 hover:text-red-700 font-bold"
-                    >
-                      ✕
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-gray-500 text-center py-4">
-                No weak topics added yet
-              </p>
-            )}
-          </div>
-        )}
+          <button
+            type="submit"
+            className="bg-sky-600 text-white px-4 py-2 rounded hover:bg-sky-700"
+          >
+            Add Topic
+          </button>
+        </form>
       </div>
 
-      {/* STUDY STREAK */}
-      <div className="bg-white p-4 sm:p-6 rounded-xl shadow-lg mb-6">
-        <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-4 flex items-center gap-2">
-          <span className="text-2xl">🔥</span>
-          Study Streak (Days 1-7)
-        </h2>
+      {/* Topics List */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        {/* Strong Topics */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Strong Topics</h3>
+          {analytics.strongTopics.length === 0 ? (
+            <p className="text-gray-500">No strong topics added yet</p>
+          ) : (
+            <ul className="space-y-2">
+              {analytics.strongTopics.map((topic, index) => (
+                <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                  <div>
+                    <span className="font-medium">{topic.name}</span>
+                    <span className="text-sm text-gray-500 ml-2">({topic.subject})</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteTopic(topic._id, 'strong')}
+                    className="text-red-500 hover:text-red-700"
+                    title="Delete topic"
+                  >
+                    🗑️
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
 
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={streakData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="day"
-              label={{
-                value: "Day (1-7 cycle)",
-                position: "insideBottom",
-                offset: -5,
-              }}
-            />
-            <YAxis
-              label={{ value: "Hours", angle: -90, position: "insideLeft" }}
-            />
-            <Tooltip />
-            <Bar dataKey="hrs" fill="#6a11cb" radius={[8, 8, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
-
-        <div className="mt-4 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              type="number"
-              value={hours}
-              onChange={(e) => setHours(e.target.value)}
-              placeholder="Hours studied today (0-24)"
-              min="0"
-              max="24"
-              step="0.5"
-              className="border border-gray-300 p-2 rounded-lg flex-1 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-            <button
-              onClick={addHours}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold transition-colors shadow-md"
-            >
-              Add Hours
-            </button>
-          </div>
-
-          <div className="flex items-center justify-between bg-purple-50 p-4 rounded-lg border border-purple-200">
-            <div>
-              <p className="text-sm text-gray-600">Average Study Time</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {avgHours} hrs/day
-              </p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-600">Total This Week</p>
-              <p className="text-2xl font-bold text-purple-600">
-                {streakData.reduce((a, b) => a + b.hrs, 0)} hrs
-              </p>
-            </div>
-          </div>
+        {/* Weak Topics */}
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-xl font-semibold mb-4">Weak Topics</h3>
+          {analytics.weakTopics.length === 0 ? (
+            <p className="text-gray-500">No weak topics added yet</p>
+          ) : (
+            <ul className="space-y-2">
+              {analytics.weakTopics.map((topic, index) => (
+                <li key={index} className="flex justify-between items-center p-2 hover:bg-gray-50 rounded">
+                  <div>
+                    <span className="font-medium">{topic.name}</span>
+                    <span className="text-sm text-gray-500 ml-2">({topic.subject})</span>
+                  </div>
+                  <button
+                    onClick={() => handleDeleteTopic(topic._id, 'weak')}
+                    className="text-red-500 hover:text-red-700"
+                    title="Delete topic"
+                  >
+                    🗑️
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </div>
 
-      {/* Summary Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-gradient-to-br from-green-400 to-green-600 p-4 rounded-xl shadow-lg text-white">
-          <p className="text-sm opacity-90">Strong Topics</p>
-          <p className="text-3xl font-bold">{strongTopics.length}</p>
+      {/* Study Hours Tracker */}
+      <div className="bg-white p-6 rounded-lg shadow">
+        <h3 className="text-xl font-semibold mb-4">Track Study Hours</h3>
+        <div className="flex items-center space-x-4">
+          <input
+            type="number"
+            min="0.5"
+            step="0.5"
+            value={hours}
+            onChange={(e) => setHours(e.target.value)}
+            placeholder="Enter hours studied"
+            className="flex-1 p-2 border rounded"
+          />
+          <button
+            onClick={handleAddHours}
+            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          >
+            Add Hours
+          </button>
         </div>
-        <div className="bg-gradient-to-br from-red-400 to-red-600 p-4 rounded-xl shadow-lg text-white">
-          <p className="text-sm opacity-90">Weak Topics</p>
-          <p className="text-3xl font-bold">{weakTopics.length}</p>
-        </div>
-        <div className="bg-gradient-to-br from-purple-400 to-purple-600 p-4 rounded-xl shadow-lg text-white">
-          <p className="text-sm opacity-90">Focus Areas</p>
-          <p className="text-3xl font-bold">{weakTopics.length}</p>
-        </div>
+        <p className="mt-2 text-sm text-gray-500">
+          Total: {analytics.studyHours} hours
+        </p>
       </div>
     </div>
   );

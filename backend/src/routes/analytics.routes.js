@@ -1,15 +1,27 @@
-import { getUserAnalytics, updateAnalytics } from "../controllers/analytics.controllers.js";
-import {verifyJWT} from "../middlewares/auth.middlewares.js"
-import {Router} from "express"
+import { Router } from "express";
+import { 
+  getUserAnalytics, 
+  updateAnalytics,
+  addTopic,
+  deleteTopic
+} from "../controllers/analytics.controllers.js";
+import { verifyJWT } from "../middlewares/auth.middlewares.js";
 
-const router=Router();
+const router = Router();
 
-//secure routes
+// Secure all routes with JWT authentication
+router.use(verifyJWT);
 
-router.route("/").get(verifyJWT,getUserAnalytics)
-router.route("/").patch(verifyJWT,updateAnalytics)
+// Get user's analytics
+router.get("/", getUserAnalytics);
 
+// Update analytics
+router.patch("/", updateAnalytics);
 
+// Add a topic
+router.post("/topics", addTopic);
 
+// Delete a topic
+router.delete("/topics/:category/:topicId", deleteTopic);
 
-export default router
+export default router;

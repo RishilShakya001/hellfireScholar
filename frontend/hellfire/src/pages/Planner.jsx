@@ -1,23 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import api from "../config/api";
 
 export default function Planner() {
-  const [plan, setPlan] = useState([
-    { day: "Day 1", task: "Math – Unit 3 + PYQs", highlight: true },
-    { day: "Day 2", task: "Physics – Electrostatics", highlight: false },
-    { day: "Day 3", task: "CS – DBMS", highlight: false },
-    { day: "Day 4", task: "Math – Integrals", highlight: false },
-    { day: "Day 5", task: "Chemistry – Thermodynamics", highlight: false },
-    { day: "Day 6", task: "Physics – Current Electricity", highlight: false },
-    { day: "Day 7", task: "Weekly Revision + Test", highlight: true },
-    { day: "Day 8", task: "Math – Differential Equations", highlight: false },
-    { day: "Day 9", task: "CS – OS Basics", highlight: false },
-    { day: "Day 10", task: "Chemistry – Electrochemistry", highlight: false },
-    { day: "Day 11", task: "Physics – Magnetism", highlight: false },
-    { day: "Day 12", task: "Math – Probability", highlight: false },
-    { day: "Day 13", task: "Full Syllabus Revision", highlight: true },
-    { day: "Day 14", task: "Mock Test + Analysis", highlight: true },
-  ]);
-
+  const [plan, setPlan] = useState([]);
   const [showForm, setShowForm] = useState(false);
 
   const [newPlan, setNewPlan] = useState({
@@ -26,13 +11,47 @@ export default function Planner() {
     highlight: false,
   });
 
-  const addPlan = () => {
-    if (!newPlan.day || !newPlan.task) return;
+  /* ---------------- LOAD PLAN ON PAGE LOAD ---------------- */
+  useEffect(() => {
+    loadStudyPlan();
+  }, []);
 
-    setPlan([...plan, newPlan]);
-    setNewPlan({ day: "", task: "", highlight: false });
-    setShowForm(false);
+  const loadStudyPlan = async () => {
+    try {
+      const res = await api.get("/studyplan/getstudyp");
+      setPlan(
+        res.data.data.days.map((d) => ({
+          day: `Day ${d.day}`,
+          task: `${d.subject} – ${d.topic}`,
+          highlight: false,
+        }))
+      );
+    } catch (err) {
+      // agar study plan nahi bana to create + generate
+      if (err.response?.status === 404) {
+        await api.post("/studyplan/create", { durationDays: 14 });
+        await api.post("/studyplan/generate");
+        loadStudyPlan();
+      }
+    }
   };
+
+  /* ---------------- ADD PLAN (MANUAL DAY) ---------------- */
+const addPlan = async () => {
+  if (!newPlan.day || !newPlan.task) return;
+
+  await api.post("/studyplan/day", {
+    day: newPlan.day.replace("Day", "").trim(),
+    task: newPlan.task,
+    highlight: newPlan.highlight,
+  });
+
+  await loadStudyPlan(); // 🔥 refresh from backend
+
+  setNewPlan({ day: "", task: "", highlight: false });
+  setShowForm(false);
+};
+
 
   return (
     <div className="space-y-8">
