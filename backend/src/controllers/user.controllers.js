@@ -92,6 +92,7 @@ if(!loggedInUser){
 const options={
   httpOnly:true,
   secure:process.env.NODE_ENV==="production",
+  sameSite:process.env.NODE_ENV==="production"?"none":"lax",
 }
 return res.status(200)
 .cookie("accessToken",accessToken,options)
@@ -115,7 +116,7 @@ const logoutUser=asyncHandler(async(req,res)=>{
 const options={
   httpOnly:true,
   secure:process.env.NODE_ENV==="production",
-
+  sameSite:process.env.NODE_ENV==="production"?"none":"lax",
 }
 
 return res
@@ -148,6 +149,7 @@ if(incomingRefreshToken!==user?.refreshToken){
 const options={
   httpOnly:true,
   secure:process.env.NODE_ENV==="production",
+  sameSite:process.env.NODE_ENV==="production"?"none":"lax",
 }
 
   const {accessToken,refreshToken:newRefreshToken}=await generateAccessAndRefreshToken(user._id)
