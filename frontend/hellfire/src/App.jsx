@@ -8,7 +8,7 @@ import Syllabus from "./pages/Syllabus";
 import Assignments from "./pages/Assignments";
 import Planner from "./pages/Planner";
 import Attendance from "./pages/Attendance";
-import ProgressAnalytics from "./pages/progressAnalytics";
+import ProgressAnalytics from "./pages/ProgressAnalytics";
 import Notes from "./pages/Notes";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Outlet } from "react-router-dom";
