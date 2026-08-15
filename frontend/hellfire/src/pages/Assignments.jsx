@@ -22,15 +22,20 @@ export default function Assignments() {
     status: "pending",
   });
 
-  /* ---------- LOAD SUBJECTS ---------- */
-  useEffect(() => {
-    loadSubjects();
-  }, []);
-
   const loadSubjects = async () => {
     const res = await getAllSubjects();
     setSubjects(res.data.data);
   };
+
+  const loadAssignments = async (subjectId) => {
+    const res = await getAssignmentsBySubject(subjectId);
+    setTasks(res.data.data);
+  };
+
+  /* ---------- LOAD SUBJECTS ---------- */
+  useEffect(() => {
+    loadSubjects();
+  }, []);
 
   /* ---------- SET DEFAULT ACTIVE SUBJECT ---------- */
   useEffect(() => {
@@ -45,11 +50,6 @@ export default function Assignments() {
       loadAssignments(activeSubjectId);
     }
   }, [activeSubjectId]);
-
-  const loadAssignments = async (subjectId) => {
-    const res = await getAssignmentsBySubject(subjectId);
-    setTasks(res.data.data);
-  };
 
   /* ---------- ADD ASSIGNMENT ---------- */
   const handleAddTask = async () => {

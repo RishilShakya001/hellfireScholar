@@ -112,7 +112,7 @@ const updateStudyPlan = asyncHandler(async (req, res) => {
 });
 
 const addStudyPlanDay = asyncHandler(async (req, res) => {
-  const { day, task, highlight = false } = req.body;
+  const { day, task, highlight = false, subject = "Custom" } = req.body;
 
   if (!day || !task) {
     throw new ApiError(400, "Day and task are required");
@@ -128,9 +128,10 @@ const addStudyPlanDay = asyncHandler(async (req, res) => {
 
   const planDay = await StudyPlanDay.create({
     studyPlanId: studyPlan._id,
-    day: Number(day.replace("Day", "").trim()),
-    subject: "Custom",
+    day: Number(String(day).replace("Day", "").trim()),
+    subject,
     topic: task,
+    highlight,
   });
 
   return res.status(201).json(
@@ -140,7 +141,7 @@ const addStudyPlanDay = asyncHandler(async (req, res) => {
 
 const updateStudyPlanDay = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const { day, task, highlight, completed } = req.body;
+  const { day, task, highlight, completed, subject } = req.body;
 
   const studyPlan = await StudyPlan.findOne({
     userId: req.user._id,
@@ -155,6 +156,7 @@ const updateStudyPlanDay = asyncHandler(async (req, res) => {
   if (typeof task !== "undefined") update.topic = task;
   if (typeof highlight !== "undefined") update.highlight = highlight;
   if (typeof completed !== "undefined") update.completed = completed;
+  if (typeof subject !== "undefined") update.subject = subject;
 
   const planDay = await StudyPlanDay.findOneAndUpdate(
     { _id: id, studyPlanId: studyPlan._id },

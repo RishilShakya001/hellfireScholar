@@ -5,10 +5,8 @@ import api from "../config/api";
 
 export default function AuthPage() {
   //forgot
-  const [forgot,setForgot]=useState(false)
   const fo=()=>{
         alert("This functionallity is not added");
-        setForgot(true)
   }
   const navigate = useNavigate();
   const [isLogin, setIsLogin] = useState(true);
@@ -49,25 +47,6 @@ export default function AuthPage() {
     }
 
     setLoading(true);
-if (loading) {
-    return (
-      <main className="flex-1 p-8">
-        <div className="flex items-center justify-center h-64">
-          <div className="text-gray-600">Loading dashboard...</div>
-        </div>
-      </main>
-    );
-  }
-
-  if (error) {
-    return (
-      <main className="flex-1 p-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg">
-          {error}
-        </div>
-      </main>
-    );
-  }
     try {
       if (isLogin) {
         // Login
@@ -135,6 +114,17 @@ if (loading) {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-brown from-blue-50 to-blue-100 flex items-center justify-center p-4">
+        <div className="text-center bg-white p-8 rounded-2xl shadow-xl w-full max-w-md flex flex-col items-center justify-center h-64">
+          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="text-gray-600 font-medium">Please wait...</div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-brown from-blue-50 to-blue-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -176,6 +166,13 @@ if (loading) {
               Sign Up
             </button>
           </div>
+
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl flex items-center gap-2">
+              <span className="w-1.5 h-1.5 bg-red-600 rounded-full shrink-0"></span>
+              <span>{error}</span>
+            </div>
+          )}
 
           {/* Form Fields */}
           <div className="space-y-4">
@@ -283,7 +280,10 @@ if (loading) {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl"
+              disabled={loading}
+              className={`w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               {isLogin ? "Login" : "Create Account"}
             </button>

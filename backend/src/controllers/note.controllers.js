@@ -136,4 +136,30 @@ const searchNotesByTag = asyncHandler(async (req, res) => {
 
 
 
-export {deleteNote,uploadNote,searchNotesByTag,getNotesBySubject}
+const createTextNote = asyncHandler(async (req, res) => {
+  const { subjectId, title, content, tags } = req.body
+
+  if ([subjectId, title, content].some(field => !field || field.trim() === "")) {
+    throw new ApiError(400, "Subject, title, and content are required")
+  }
+
+  try {
+    const note = await Note.create({
+      userId: req.user._id,
+      subjectId,
+      title,
+      content,
+      tags: tags || "",
+      uploadedAt: new Date(),
+    })
+
+    return res
+      .status(201)
+      .json(new ApiResponse(201, note, "Text note created successfully"))
+  } catch (error) {
+    console.error("Text note creation failed:", error)
+    throw new ApiError(500, "Something went wrong while creating text note")
+  }
+})
+
+export {deleteNote,uploadNote,searchNotesByTag,getNotesBySubject,createTextNote}

@@ -316,6 +316,7 @@ const getDashBoard=asyncHandler(async(req,res)=>{
         studyPlanDuration: 1,
 
         studyStreakDays: "$analytics.studyStreakDays",
+        studyHours: "$analytics.studyHours",
         weakTopics: "$analytics.weakTopics",
         strongTopics: "$analytics.strongTopics"
       }

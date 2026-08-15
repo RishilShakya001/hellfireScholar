@@ -20,7 +20,12 @@ const NoteSchema = new mongoose.Schema(
 
     fileUrl: {
       type: String,//cloudinary url
-      required: true,
+      required: false,
+    },
+
+    content: {
+      type: String,
+      required: false,
     },
 
     tags: {

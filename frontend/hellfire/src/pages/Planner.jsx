@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import api from "../config/api";
 import { fetchStudyPlanProgress } from "../services/analyticsApi";
 
@@ -11,23 +11,20 @@ export default function Planner() {
 
   const [newPlan, setNewPlan] = useState({
     day: "",
+    subject: "Custom",
     task: "",
     highlight: false,
   });
 
-  /* ---------------- LOAD PLAN ON PAGE LOAD ---------------- */
-  useEffect(() => {
-    loadStudyPlan();
-  }, []);
-
-  const loadStudyPlan = async () => {
+  const loadStudyPlan = useCallback(async () => {
     try {
       const res = await api.get("/studyplan/getstudyp");
       setPlan(
         res.data.data.days.map((d) => ({
           id: d._id,
           day: `Day ${d.day}`,
-          task: `${d.subject} – ${d.topic}`,
+          subject: d.subject || "Custom",
+          task: d.topic,
           highlight: d.highlight || false,
           completed: d.completed || false,
         }))
@@ -39,6 +36,7 @@ export default function Planner() {
         setServerProgress(p.data.data || p.data);
       } catch (pe) {
         // ignore if progress endpoint not available
+        console.warn("Failed to fetch study plan progress:", pe);
       }
     } catch (err) {
       // if study plan doesn't exist, create + generate
@@ -48,7 +46,12 @@ export default function Planner() {
         loadStudyPlan();
       }
     }
-  };
+  }, []);
+
+  /* ---------------- LOAD PLAN ON PAGE LOAD ---------------- */
+  useEffect(() => {
+    loadStudyPlan();
+  }, [loadStudyPlan]);
 
   /* ---------------- ADD / EDIT PLAN (PERSISTED) ---------------- */
   const addPlan = async () => {
@@ -61,11 +64,12 @@ export default function Planner() {
       try {
         await api.patch(`/studyplan/day/${id}`, {
           day: newPlan.day,
+          subject: newPlan.subject,
           task: newPlan.task,
           highlight: newPlan.highlight,
         });
         await loadStudyPlan();
-        setNewPlan({ day: "", task: "", highlight: false });
+        setNewPlan({ day: "", subject: "Custom", task: "", highlight: false });
         setEditIndex(null);
         setShowForm(false);
       } catch (err) {
@@ -79,12 +83,13 @@ export default function Planner() {
     try {
       await api.post("/studyplan/day", {
         day: newPlan.day,
+        subject: newPlan.subject,
         task: newPlan.task,
         highlight: newPlan.highlight,
       });
 
       await loadStudyPlan();
-      setNewPlan({ day: "", task: "", highlight: false });
+      setNewPlan({ day: "", subject: "Custom", task: "", highlight: false });
       setShowForm(false);
     } catch (err) {
       // If study plan missing, create + generate then retry
@@ -94,11 +99,12 @@ export default function Planner() {
           await api.post("/studyplan/generate");
           await api.post("/studyplan/day", {
             day: newPlan.day,
+            subject: newPlan.subject,
             task: newPlan.task,
             highlight: newPlan.highlight,
           });
           await loadStudyPlan();
-          setNewPlan({ day: "", task: "", highlight: false });
+          setNewPlan({ day: "", subject: "Custom", task: "", highlight: false });
           setShowForm(false);
         } catch (e) {
           console.error(e);
@@ -135,6 +141,7 @@ export default function Planner() {
   const editPlan = (index) => {
     setNewPlan({
       day: plan[index].day,
+      subject: plan[index].subject,
       task: plan[index].task,
       highlight: plan[index].highlight,
     });
@@ -143,7 +150,7 @@ export default function Planner() {
   };
 
   const cancelEdit = () => {
-    setNewPlan({ day: "", task: "", highlight: false });
+    setNewPlan({ day: "", subject: "Custom", task: "", highlight: false });
     setEditIndex(null);
     setShowForm(false);
   };
@@ -210,6 +217,14 @@ export default function Planner() {
               className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-purple-500 focus:outline-none transition-colors"
               value={newPlan.day}
               onChange={(e) => setNewPlan({ ...newPlan, day: e.target.value })}
+            />
+
+            <input
+              type="text"
+              placeholder="Subject (e.g. Physics)"
+              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-purple-500 focus:outline-none transition-colors"
+              value={newPlan.subject}
+              onChange={(e) => setNewPlan({ ...newPlan, subject: e.target.value })}
             />
 
             <input
@@ -293,11 +308,14 @@ export default function Planner() {
                     {item.day}
                   </span>
                   <span
-                    className={`text-gray-800 font-medium ${
+                    className={`text-gray-800 font-medium flex items-center gap-2 ${
                       item.completed ? "line-through text-gray-500" : ""
                     }`}
                   >
-                    {item.task}
+                    <span className="text-slate-500 text-xs font-semibold bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                      {item.subject}
+                    </span>
+                    <span>{item.task}</span>
                   </span>
                 </div>
 

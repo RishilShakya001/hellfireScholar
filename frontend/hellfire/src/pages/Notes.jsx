@@ -7,6 +7,7 @@ import {
   uploadNote,
   getNotesBySubject,
   deleteNote,
+  createTextNote,
 } from "../services/noteApi";
 
 const Notes = () => {
@@ -18,12 +19,15 @@ const Notes = () => {
   const [selectedSubjectId, setSelectedSubjectId] = useState(null);
   const [isAdding, setIsAdding] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [noteType, setNoteType] = useState("pdf"); // "pdf" or "text"
+  const [expandedNoteId, setExpandedNoteId] = useState(null);
 
   // Form data
   const [formData, setFormData] = useState({
     subject: "",
     title: "",
     pdfFile: null,
+    content: "",
   });
 
   /* ----------------------------------
@@ -35,7 +39,7 @@ const Notes = () => {
         const res = await getAllSubjects();
         setSubjects(res.data.data);
       } catch (err) {
-        console.error("Failed to load subjects");
+        console.error("Failed to load subjects", err);
       }
     };
 
@@ -78,8 +82,16 @@ const Notes = () => {
      SAVE NOTE (BACKEND CONNECTED)
   -----------------------------------*/
   const handleSaveNote = async () => {
-    if (!formData.subject || !formData.title || !formData.pdfFile) {
-      alert("All fields are required");
+    if (!formData.subject || !formData.title) {
+      alert("Subject name and note title are required");
+      return;
+    }
+    if (noteType === "pdf" && !formData.pdfFile) {
+      alert("Please upload a PDF file");
+      return;
+    }
+    if (noteType === "text" && !formData.content.trim()) {
+      alert("Please write some content for the text note");
       return;
     }
 
@@ -90,13 +102,22 @@ const Notes = () => {
       const subjectRes = await findOrCreateSubject(formData.subject);
       const subjectId = subjectRes.data.data._id;
 
-      // 2️⃣ Upload note
-      const data = new FormData();
-      data.append("subjectId", subjectId);
-      data.append("title", formData.title);
-      data.append("File", formData.pdfFile);
-
-      const noteRes = await uploadNote(data);
+      let noteRes;
+      if (noteType === "pdf") {
+        // 2️⃣ Upload note PDF
+        const data = new FormData();
+        data.append("subjectId", subjectId);
+        data.append("title", formData.title);
+        data.append("File", formData.pdfFile);
+        noteRes = await uploadNote(data);
+      } else {
+        // 2️⃣ Save text note
+        noteRes = await createTextNote({
+          subjectId,
+          title: formData.title,
+          content: formData.content,
+        });
+      }
 
       // 3️⃣ Update UI
       setNotes((prev) => [noteRes.data.data, ...prev]);
@@ -106,10 +127,11 @@ const Notes = () => {
         subject: "",
         title: "",
         pdfFile: null,
+        content: "",
       });
 
     } catch (err) {
-      alert(err.response?.data?.message || "Upload failed");
+      alert(err.response?.data?.message || "Failed to save note");
     } finally {
       setLoading(false);
     }
@@ -149,7 +171,35 @@ const Notes = () => {
 
         {/* ADD NOTE FORM */}
         {isAdding && (
-          <div className="bg-white p-4 rounded shadow mb-6">
+          <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-200 mb-6 space-y-4">
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Create Note</h2>
+            
+            {/* Note Type Toggle */}
+            <div className="flex gap-2 bg-gray-100 rounded-lg p-1 w-fit">
+              <button
+                type="button"
+                onClick={() => setNoteType("pdf")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+                  noteType === "pdf"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                📄 Upload PDF
+              </button>
+              <button
+                type="button"
+                onClick={() => setNoteType("text")}
+                className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
+                  noteType === "text"
+                    ? "bg-white text-blue-600 shadow-sm"
+                    : "text-gray-600 hover:text-gray-800"
+                }`}
+              >
+                📝 Write Text Note
+              </button>
+            </div>
+
             <input
               type="text"
               placeholder="Subject name"
@@ -157,7 +207,7 @@ const Notes = () => {
               onChange={(e) =>
                 setFormData({ ...formData, subject: e.target.value })
               }
-              className="w-full mb-3 p-2 border rounded"
+              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
 
             <input
@@ -167,74 +217,84 @@ const Notes = () => {
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              className="w-full mb-3 p-2 border rounded"
+              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
 
-            <div className="mb-4">
-  <label className="block text-sm font-semibold text-gray-700 mb-2">
-    Upload PDF
-  </label>
+            {noteType === "pdf" ? (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Upload PDF Resource
+                </label>
 
-  {!formData.pdfFile ? (
-    <label
-      htmlFor="pdf-upload"
-      className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
-    >
-      <span className="text-4xl mb-2">📄</span>
-      <span className="text-blue-600 font-semibold">
-        Click to upload PDF
-      </span>
-      <span className="text-xs text-gray-500 mt-1">
-        Max size: 10MB
-      </span>
+                {!formData.pdfFile ? (
+                  <label
+                    htmlFor="pdf-upload"
+                    className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+                  >
+                    <span className="text-4xl mb-2">📄</span>
+                    <span className="text-blue-600 font-semibold">
+                      Click to upload PDF
+                    </span>
+                    <span className="text-xs text-gray-500 mt-1">
+                      Max size: 10MB
+                    </span>
 
-      <input
-        id="pdf-upload"
-        type="file"
-        accept="application/pdf"
-        onChange={handleFileChange}
-        className="hidden"
-      />
-    </label>
-  ) : (
-    <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-300">
-      <div className="flex items-center gap-3">
-        <span className="text-3xl">📄</span>
-        <div>
-          <p className="font-semibold text-green-800">
-            {formData.pdfFile.name}
-          </p>
-          <p className="text-xs text-green-600">
-            {(formData.pdfFile.size / 1024 / 1024).toFixed(2)} MB
-          </p>
-        </div>
-      </div>
+                    <input
+                      id="pdf-upload"
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-300">
+                    <div className="flex items-center gap-3">
+                      <span className="text-3xl">📄</span>
+                      <div>
+                        <p className="font-semibold text-green-800">
+                          {formData.pdfFile.name}
+                        </p>
+                        <p className="text-xs text-green-600">
+                          {(formData.pdfFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
 
-      <button
-        onClick={() =>
-          setFormData({ ...formData, pdfFile: null })
-        }
-        className="text-red-600 font-bold text-xl hover:text-red-800"
-      >
-        ✕
-      </button>
-      
-    </div>
-  )}
-</div>
+                    <button
+                      onClick={() =>
+                        setFormData({ ...formData, pdfFile: null })
+                      }
+                      className="text-red-600 font-bold text-xl hover:text-red-800"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <textarea
+                placeholder="Write your study notes here..."
+                value={formData.content}
+                onChange={(e) =>
+                  setFormData({ ...formData, content: e.target.value })
+                }
+                rows={6}
+                className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition font-sans"
+              />
+            )}
 
-
-            <div className="flex gap-2">
+            <div className="flex gap-2 pt-2">
               <button
                 onClick={handleSaveNote}
                 disabled={loading}
-                className="bg-green-600 text-white px-4 py-2 rounded"
+                className="bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold shadow hover:bg-blue-700 transition"
               >
-                {loading ? "Uploading..." : "Save"}
+                {loading ? "Saving..." : "Save Note"}
               </button>
               <button
                 onClick={() => setIsAdding(false)}
-                className="bg-gray-400 text-white px-4 py-2 rounded"
+                className="bg-gray-200 text-gray-700 px-5 py-2 rounded-xl font-semibold hover:bg-gray-300 transition"
               >
                 Cancel
               </button>
@@ -281,33 +341,55 @@ const Notes = () => {
   </div>
 ) : (
   <div className="space-y-4">
-    {notes.map((note) => (
-      <div
-        key={note._id}
-        className="bg-white rounded-xl shadow-md border border-gray-200 p-5 flex items-center justify-between hover:shadow-lg transition"
-      >
-        <div>
-          <h3 className="text-lg font-bold text-gray-800">
-            {note.title}
-          </h3>
-          <a
-            href={note.fileUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium mt-1"
-          >
-            📄 View PDF
-          </a>
-        </div>
+    {notes.map((note) => {
+      const isExpanded = expandedNoteId === note._id;
+      const isTextNote = !!note.content;
 
-        <button
-          onClick={() => handleDeleteNote(note._id)}
-          className="text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded-lg hover:bg-red-50 transition"
+      return (
+        <div
+          key={note._id}
+          className="bg-white rounded-xl shadow-md border border-gray-200 p-5 hover:shadow-lg transition flex flex-col gap-3"
         >
-          🗑 Delete
-        </button>
-      </div>
-    ))}
+          <div className="flex items-start justify-between">
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+                {isTextNote ? "📝" : "📄"} {note.title}
+              </h3>
+              {!isTextNote ? (
+                <a
+                  href={note.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium mt-1 text-sm"
+                >
+                  View PDF Resource
+                </a>
+              ) : (
+                <button
+                  onClick={() => setExpandedNoteId(isExpanded ? null : note._id)}
+                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium mt-1 text-sm outline-none"
+                >
+                  {isExpanded ? "Hide Note Content" : "Show Note Content"}
+                </button>
+              )}
+            </div>
+
+            <button
+              onClick={() => handleDeleteNote(note._id)}
+              className="text-red-600 hover:text-red-800 font-semibold px-3 py-1 rounded-lg hover:bg-red-50 transition text-sm"
+            >
+              🗑 Delete
+            </button>
+          </div>
+
+          {isTextNote && isExpanded && (
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-gray-700 text-sm whitespace-pre-wrap font-sans mt-2">
+              {note.content}
+            </div>
+          )}
+        </div>
+      );
+    })}
   </div>
 )}
 

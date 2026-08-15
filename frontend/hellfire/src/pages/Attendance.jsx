@@ -21,15 +21,15 @@ export default function Attendance() {
 
   const [calendarDate, setCalendarDate] = useState(new Date());
 
-  /* ---------------- LOAD SUBJECTS ---------------- */
-  useEffect(() => {
-    loadSubjects();
-  }, []);
-
   const loadSubjects = async () => {
     const res = await getAllSubjects();
     setSubjects(res.data.data);
   };
+
+  /* ---------------- LOAD SUBJECTS ---------------- */
+  useEffect(() => {
+    loadSubjects();
+  }, []);
 
   /* ---------------- LOAD ATTENDANCE ---------------- */
   const loadAttendance = async (subjectId) => {

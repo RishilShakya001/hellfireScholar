@@ -10,3 +10,6 @@ export const getNotesBySubject = (subjectId) =>
 
 export const deleteNote = (noteId) =>
   api.delete(`/note/${noteId}`);
+
+export const createTextNote = (noteData) =>
+  api.post("/note/create-text", noteData);
