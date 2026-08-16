@@ -354,7 +354,11 @@ const googleLogin = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid Google ID Token");
   }
 
-  const { email, name, picture, sub: googleId } = googleUser;
+  const { email, name, picture, sub: googleId, aud } = googleUser;
+
+  if (process.env.GOOGLE_CLIENT_ID && aud !== process.env.GOOGLE_CLIENT_ID) {
+    throw new ApiError(401, "Google ID Token audience mismatch");
+  }
 
   if (!email) {
     throw new ApiError(400, "Email not provided by Google account");
