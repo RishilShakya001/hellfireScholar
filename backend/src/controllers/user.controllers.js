@@ -336,7 +336,64 @@ const getDashBoard=asyncHandler(async(req,res)=>{
 
 })
 
+const googleLogin = asyncHandler(async (req, res) => {
+  const { idToken } = req.body;
+  if (!idToken) {
+    throw new ApiError(400, "Google ID Token is required");
+  }
 
+  // Verify the ID Token with Google's API
+  let googleUser;
+  try {
+    const response = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${idToken}`);
+    if (!response.ok) {
+      throw new Error("Failed to verify token");
+    }
+    googleUser = await response.json();
+  } catch (err) {
+    throw new ApiError(401, "Invalid Google ID Token");
+  }
+
+  const { email, name, picture, sub: googleId } = googleUser;
+
+  if (!email) {
+    throw new ApiError(400, "Email not provided by Google account");
+  }
+
+  // Find or create user
+  let user = await User.findOne({ email });
+
+  if (!user) {
+    // Create new user (using a random secure password as local password)
+    const randomPassword = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+    user = await User.create({
+      name: name || email.split("@")[0],
+      email,
+      password: randomPassword,
+      authProvider: "google"
+    });
+  }
+
+  const { accessToken, refreshToken } = await generateAccessAndRefreshToken(user._id);
+
+  const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
+
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
+    .json(new ApiResponse(200, {
+      user: loggedInUser,
+      accessToken,
+      refreshToken
+    }, "Google user logged in successfully"));
+});
 
 export {registerUser,
     loginUser,
@@ -345,4 +402,5 @@ export {registerUser,
     changeCurrentPassword
     ,getCurrentUser
     ,getDashBoard
+    ,googleLogin
 }

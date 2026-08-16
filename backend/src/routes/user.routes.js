@@ -1,10 +1,11 @@
 import {Router} from "express";
-import {loginUser, registerUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser, getDashBoard} from "../controllers/user.controllers.js"
+import {loginUser, registerUser,logoutUser,refreshAccessToken,changeCurrentPassword,getCurrentUser, getDashBoard, googleLogin} from "../controllers/user.controllers.js"
 import {verifyJWT} from "../middlewares/auth.middlewares.js"
 const router=Router()
 //unsecure routes
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser)
+router.route("/google-login").post(googleLogin)
 
 router.route("/refresh-token").post(refreshAccessToken)
 
