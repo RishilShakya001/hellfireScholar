@@ -10,6 +10,7 @@ import Planner from "./pages/Planner";
 import Attendance from "./pages/Attendance";
 import ProgressAnalytics from "./pages/ProgressAnalytics";
 import Notes from "./pages/Notes";
+import AiAssistant from "./pages/AiAssistant";
 import ProtectedRoute from "./components/ProtectedRoute";
 import { Outlet } from "react-router-dom";
 
@@ -43,6 +44,7 @@ export default function App() {
         <Route path="planner" element={<Planner />} />
         <Route path="progress-analytics" element={<ProgressAnalytics />} />
         <Route path="notes" element={<Notes />} />
+        <Route path="ai-assistant" element={<AiAssistant />} />
       </Route>
     </Routes>
   );

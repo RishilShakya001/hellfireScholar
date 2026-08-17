@@ -352,8 +352,24 @@ const Notes = () => {
         >
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-gray-800 flex items-center gap-2">
+              <h3 className="text-lg font-bold text-gray-800 flex items-center flex-wrap gap-2">
                 {isTextNote ? "📝" : "📄"} {note.title}
+                {note.ingestionStatus && (
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-semibold border ${
+                    note.ingestionStatus === "completed"
+                      ? "bg-green-50 text-green-700 border-green-200"
+                      : note.ingestionStatus === "processing"
+                      ? "bg-amber-50 text-amber-700 border-amber-200 animate-pulse"
+                      : note.ingestionStatus === "failed"
+                      ? "bg-red-50 text-red-700 border-red-200"
+                      : "bg-gray-50 text-gray-600 border-gray-200"
+                  }`}>
+                    {note.ingestionStatus === "completed" && "✓ AI Ready"}
+                    {note.ingestionStatus === "processing" && "⚡ Processing..."}
+                    {note.ingestionStatus === "failed" && "✗ AI Failed"}
+                    {note.ingestionStatus === "pending" && "⏳ Queueing..."}
+                  </span>
+                )}
               </h3>
               {!isTextNote ? (
                 <a

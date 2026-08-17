@@ -57,6 +57,10 @@ export default function Sidebar() {
         <NavLink to="/dashboard/progress-analytics" className={linkClass}>
           Progress Analytics
         </NavLink>
+
+        <NavLink to="/dashboard/ai-assistant" className={linkClass}>
+          AI Assistant 🤖
+        </NavLink>
       </nav>
 
       {/* Logout Button */}

@@ -80,15 +80,14 @@ const deleteUnit=asyncHandler(async(req,res)=>{
 
     }
 
-    return res.status(200).json
-(
-    new ApiResponse(200,{},"unit deleted succefully")
-);
+  return res.status(200).json(
+    new ApiResponse(200, {}, "unit deleted succefully")
+  );
 });
 
 export {
-    addSyllabusUnit,
-    toggleUnitCompletion,
-    updateUnit,
-    deleteUnit
+  addSyllabusUnit,
+  toggleUnitCompletion,
+  updateUnit,
+  deleteUnit
 }

@@ -1,5 +1,4 @@
 import { useEffect, useState, useCallback } from "react";
-import LectureCard from "./LectureCard";
 import api from "../config/api";
 import { useNavigate } from "react-router-dom";
 
@@ -371,32 +370,6 @@ export default function Dashboard() {
         </div>
 
       </div>
-
-      {/* Recommended Lectures */}
-      <section className="bg-slate-100/50 p-6 rounded-3xl border border-slate-100">
-        <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-          🎥 Recommended Lecture Resources
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <LectureCard
-            title="Quantum Mechanics Basics"
-            subject="Physics"
-            duration="45 min"
-          />
-          <LectureCard
-            title="Organic Chemistry Intro"
-            subject="Chemistry"
-            duration="30 min"
-          />
-          <LectureCard
-            title="World War II Overview"
-            subject="History"
-            duration="50 min"
-          />
-        </div>
-      </section>
-
     </main>
   );
 }

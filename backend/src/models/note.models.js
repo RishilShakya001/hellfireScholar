@@ -28,6 +28,16 @@ const NoteSchema = new mongoose.Schema(
       required: false,
     },
 
+    ingestionStatus: {
+      type: String,
+      enum: ["pending", "processing", "completed", "failed"],
+      default: "pending",
+    },
+
+    ingestionError: {
+      type: String,
+    },
+
     tags: {
       type: [String],
       default: [],

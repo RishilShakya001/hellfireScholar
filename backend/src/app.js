@@ -43,6 +43,7 @@ import studyPlanRouter from "./routes/studyplan.routes.js"
 import analyticsRouter from "./routes/analytics.routes.js"
 
 import noteRouter from "./routes/note.routes.js"
+import aiRouter from "./routes/ai.routes.js"
 
  //write routes
 app.use("/api/v1/healthcheck",healthcheckRouter)
@@ -61,6 +62,7 @@ app.use("/api/v1/studyplan",studyPlanRouter)
 app.use("/api/v1/analytics",analyticsRouter)
 
 app.use("/api/v1/note",noteRouter)
+app.use("/api/v1/ai",aiRouter)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -3,6 +3,9 @@ import { ApiError } from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { deleteFromCloudinary, uploadOnCloudinary } from "../utils/cloudinary.js"
 import {Note} from "../models/note.models.js"
+import { ingestNote } from "../services/ragIngestionService.js"
+import { StudyNoteChunk } from "../models/studyNoteChunk.models.js"
+import fs from "fs"
 
 const uploadNote = asyncHandler(async (req, res) => {
   const { subjectId, title, tags } = req.body
@@ -19,10 +22,21 @@ const uploadNote = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Note file is missing")
   }
 
+  // ✅ Create a temporary copy for RAG ingestion before Cloudinary deletes the original
+  const ingestTempPath = `./public/temp/ingest_${Date.now()}_${req.file.filename || "file"}.pdf`;
+  try {
+    fs.copyFileSync(noteLocalPath, ingestTempPath);
+  } catch (copyErr) {
+    console.error("[RAG] Failed to create temporary copy for ingestion:", copyErr.message);
+  }
+
   // ✅ Upload note file
   const noteFile = await uploadOnCloudinary(noteLocalPath)
 
   if (!noteFile || !noteFile.url) {
+    if (fs.existsSync(ingestTempPath)) {
+      try { fs.unlinkSync(ingestTempPath); } catch {}
+    }
     throw new ApiError(500, "Note upload failed")
   }
 
@@ -37,11 +51,21 @@ const uploadNote = asyncHandler(async (req, res) => {
       uploadedAt: new Date(),
     })
 
+    // ✅ Trigger RAG Ingestion asynchronously in the background using local copy path
+    ingestNote(note._id, ingestTempPath).catch((err) =>
+      console.error(`[RAG] Background ingestion failed for note ${note._id}:`, err)
+    );
+
     return res
       .status(201)
       .json(new ApiResponse(201, note, "Note uploaded successfully"))
   } catch (error) {
     console.log("Note creation failed")
+    
+    // Cleanup temporary file copy on database creation failure
+    if (fs.existsSync(ingestTempPath)) {
+      try { fs.unlinkSync(ingestTempPath); } catch {}
+    }
 
     // 🧹 Cleanup uploaded file
     if (noteFile?.public_id) {
@@ -82,6 +106,9 @@ const deleteNote = asyncHandler(async (req, res) => {
 
       await deleteFromCloudinary(publicId)
     }
+
+    // 🗑 Delete associated vector chunks
+    await StudyNoteChunk.deleteMany({ noteId })
 
     // 🗑 Delete DB record
     await note.deleteOne()
@@ -152,6 +179,11 @@ const createTextNote = asyncHandler(async (req, res) => {
       tags: tags || "",
       uploadedAt: new Date(),
     })
+
+    // ✅ Trigger RAG Ingestion asynchronously in the background
+    ingestNote(note._id).catch((err) =>
+      console.error(`[RAG] Background ingestion failed for text note ${note._id}:`, err)
+    );
 
     return res
       .status(201)

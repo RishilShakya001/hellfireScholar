@@ -176,8 +176,8 @@ const ProgressAnalytics = () => {
         {/* Topics by Subject */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Topics by Subject</h3>
-          <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-80 w-full relative">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <BarChart data={getChartData()}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="subject" />
@@ -194,8 +194,8 @@ const ProgressAnalytics = () => {
         {/* Strong vs Weak Topics */}
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">Topics Overview</h3>
-          <div className="h-80 flex items-center justify-center">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-80 w-full relative">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
               <PieChart>
                 <Pie
                   data={[

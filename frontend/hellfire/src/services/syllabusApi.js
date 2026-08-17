@@ -13,7 +13,6 @@ export const getUnitBySubject=(subjectId)=>api.get(`/subject/${subjectId}/units`
 export const toggleUnit = (unitId) =>
   api.patch(`/syllabus-unit/units/${unitId}/toggle`);
 
-export const updateProgress = (syllabusId) =>
-  api.patch(`/syllabus/${syllabusId}/progress`);
-// Add this to your existing syllabusApi.js
 export const deleteUnit = (unitId) => api.delete(`/syllabus-unit/units/${unitId}`);
+export const updateProgress = (syllabusId) => api.patch(`/syllabus/${syllabusId}/progress`);
+

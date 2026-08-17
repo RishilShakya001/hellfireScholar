@@ -97,7 +97,20 @@ Frontend: `http://localhost:5173`
 /api/v1/studyplan
 /api/v1/analytics
 /api/v1/note
+/api/v1/ai
 ```
+
+## 🤖 AI Study Assistant - RAG Architecture
+
+Hellfire Scholar contains a production-quality, fully secure **Retrieval-Augmented Generation (RAG)** pipeline that lets students chat with their uploaded course materials (PDF or text notes).
+
+### 🛠️ Key Details
+- **Ingestion Pipeline**: Upload Note ➔ Cloudinary ➔ PDF Text Extraction (`pdf-parse`) ➔ Space-Aware Chunking ➔ Embedding Generation (OpenAI) ➔ MongoDB Atlas Vector Storage.
+- **Pre-Filtered Retrieval**: Vector search is pre-filtered by the authenticated user's `userId` and current `subjectId` (ensuring absolute data isolation).
+- **Hybrid Retrieval Strategy**: Automatically falls back to **In-Memory Cosine Similarity** matching if no MongoDB Atlas Vector Search index is configured, guaranteeing full functionality in local development out-of-the-box.
+- **Citations**: Returns exact document names and page numbers used to generate answers.
+
+*For setup instructions, vector index definitions, and architecture details, refer to the [RAG Architecture Document](file:///d:/gitHubPull/HellfireScholar/RAG_ARCHITECTURE.md).*
 
 ## 🔐 Security
 
