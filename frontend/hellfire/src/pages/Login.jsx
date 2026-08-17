@@ -164,9 +164,9 @@ export default function AuthPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-brown from-blue-50 to-blue-100 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-brown from-sky-50 to-sky-100 flex items-center justify-center p-4">
         <div className="text-center bg-white p-8 rounded-2xl shadow-xl w-full max-w-md flex flex-col items-center justify-center h-64">
-          <div className="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+          <div className="w-10 h-10 border-4 border-sky-600 border-t-transparent rounded-full animate-spin mb-4"></div>
           <div className="text-gray-600 font-medium">Please wait...</div>
         </div>
       </div>
@@ -174,12 +174,12 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-brown from-blue-50 to-blue-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-brown from-sky-50 to-sky-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo and Title */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center mb-4">
-            <div className="bg-blue-600 p-3 rounded-xl">
+            <div className="bg-sky-600 p-3 rounded-xl">
               <BookOpen className="w-8 h-8 text-white" />
             </div>
           </div>
@@ -197,7 +197,7 @@ export default function AuthPage() {
               onClick={() => setIsLogin(true)}
               className={`flex-1 py-2 rounded-md font-medium transition-all ${
                 isLogin
-                  ? "bg-white text-blue-600 shadow-sm"
+                  ? "bg-white text-sky-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
@@ -207,7 +207,7 @@ export default function AuthPage() {
               onClick={() => setIsLogin(false)}
               className={`flex-1 py-2 rounded-md font-medium transition-all ${
                 !isLogin
-                  ? "bg-white text-blue-600 shadow-sm"
+                  ? "bg-white text-sky-600 shadow-sm"
                   : "text-gray-600 hover:text-gray-800"
               }`}
             >
@@ -237,7 +237,7 @@ export default function AuthPage() {
                     value={formData.name}
                     onChange={(e) => handleChange("name", e.target.value)}
                     placeholder="Enter your full name"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition"
                   />
                 </div>
               </div>
@@ -255,7 +255,7 @@ export default function AuthPage() {
                   value={formData.email}
                   onChange={(e) => handleChange("email", e.target.value)}
                   placeholder="Enter your email"
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition"
                 />
               </div>
             </div>
@@ -272,7 +272,7 @@ export default function AuthPage() {
                   value={formData.password}
                   onChange={(e) => handleChange("password", e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition"
                 />
                 <button
                   type="button"
@@ -303,7 +303,7 @@ export default function AuthPage() {
                       handleChange("confirmPassword", e.target.value)
                     }
                     placeholder="Confirm your password"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent outline-none transition"
                   />
                 </div>
               </div>
@@ -315,11 +315,11 @@ export default function AuthPage() {
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    className="w-4 h-4 text-sky-600 border-gray-300 rounded focus:ring-sky-500"
                   />
                   <span className="ml-2 text-gray-600">Remember me</span>
                 </label>
-                <button onClick={fo} className="text-blue-600 hover:text-blue-700 font-medium" >
+                <button onClick={fo} className="text-sky-600 hover:text-sky-700 font-medium" >
                   Forgot password?
                 </button>
               </div>
@@ -329,7 +329,7 @@ export default function AuthPage() {
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className={`w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg hover:shadow-xl ${
+              className={`w-full bg-sky-600 text-white py-3 rounded-lg font-semibold hover:bg-sky-700 transition-colors shadow-lg hover:shadow-xl ${
                 loading ? "opacity-50 cursor-not-allowed" : ""
               }`}
             >
@@ -359,7 +359,7 @@ export default function AuthPage() {
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button
               onClick={() => setIsLogin(!isLogin)}
-              className="text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sky-600 hover:text-sky-700 font-medium"
             >
               {isLogin ? "Sign up" : "Login"}
             </button>

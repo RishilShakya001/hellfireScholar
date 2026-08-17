@@ -81,9 +81,9 @@ export default function Attendance() {
   });
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-50 rounded-lg shadow-lg space-y-6">
+    <div className="p-6 max-w-4xl mx-auto bg-white border border-sky-100 rounded-2xl shadow-sm space-y-6">
 
-      <h1 className="text-3xl font-bold text-blue-700">
+      <h1 className="text-3xl font-bold text-sky-800">
         📅 Attendance Manager
       </h1>
 
@@ -94,11 +94,11 @@ export default function Attendance() {
           value={newSubject}
           onChange={(e) => setNewSubject(e.target.value)}
           placeholder="Enter subject name"
-          className="border p-2 flex-grow rounded"
+          className="border border-sky-200 p-2.5 flex-grow rounded-lg outline-none focus:border-sky-500 transition text-sm bg-sky-50/50"
         />
         <button
           onClick={addSubject}
-          className="bg-blue-500 text-white px-4 rounded hover:bg-blue-600"
+          className="bg-sky-600 text-white px-5 rounded-lg hover:bg-sky-700 transition font-semibold text-sm"
         >
           Add
         </button>
@@ -113,11 +113,11 @@ export default function Attendance() {
               setSelectedSubject(sub);
               loadAttendance(sub._id);
             }}
-            className={`p-4 rounded cursor-pointer shadow
+            className={`p-4 rounded-xl cursor-pointer shadow-sm border transition-all duration-200
               ${
                 selectedSubject?._id === sub._id
-                  ? "bg-blue-100 border-2 border-blue-500"
-                  : "bg-white"
+                  ? "bg-sky-50 border-sky-200 text-sky-800 shadow-sm"
+                  : "bg-white border-slate-100 hover:border-slate-200 text-slate-600"
               }`}
           >
             <h2 className="font-semibold text-lg">
@@ -184,8 +184,8 @@ export default function Attendance() {
             </div>
 
             {/* MONTHLY STATS */}
-            <div className="bg-blue-50 p-4 rounded-lg space-y-3">
-              <h3 className="font-semibold text-blue-700">
+            <div className="bg-sky-50 border border-sky-100 p-4 rounded-xl space-y-3">
+              <h3 className="font-semibold text-sky-800">
                 📊 Monthly Summary
               </h3>
 

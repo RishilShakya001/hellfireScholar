@@ -167,11 +167,11 @@ export default function Dashboard() {
               <p className="text-lg font-bold text-amber-900">{studyStreakDays} Days</p>
             </div>
           </div>
-          <div className="flex items-center gap-2.5 bg-blue-50 border border-blue-200 px-4 py-2.5 rounded-xl">
+          <div className="flex items-center gap-2.5 bg-sky-100/50 border border-sky-200 px-4 py-2.5 rounded-xl">
             <span className="text-2xl">⏱</span>
             <div>
-              <p className="text-xs text-blue-700 font-semibold uppercase tracking-wider">Focus Time</p>
-              <p className="text-lg font-bold text-blue-900">{studyHours} Hrs</p>
+              <p className="text-xs text-sky-700 font-semibold uppercase tracking-wider">Focus Time</p>
+              <p className="text-lg font-bold text-sky-900">{studyHours} Hrs</p>
             </div>
           </div>
         </div>
@@ -271,7 +271,7 @@ export default function Dashboard() {
         <div className="space-y-8">
           
           {/* Pomodoro Card */}
-          <div className="bg-gradient-to-br from-indigo-950 via-slate-900 to-sky-950 text-white rounded-3xl shadow-xl p-6 border border-slate-800 flex flex-col items-center relative overflow-hidden">
+          <div className="bg-gradient-to-br from-sky-900 via-slate-900 to-sky-950 text-white rounded-3xl shadow-xl p-6 border border-slate-800 flex flex-col items-center relative overflow-hidden">
             {/* Background design elements */}
             <div className="absolute top-0 right-0 w-32 h-32 bg-sky-500 rounded-full filter blur-3xl opacity-10"></div>
             

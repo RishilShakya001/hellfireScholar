@@ -11,7 +11,7 @@ import {
 } from "../services/analyticsApi";
 import { toast } from "react-toastify";
 
-const COLORS = ["#6a11cb", "#2575fc", "#ff6b6b", "#4CAF50"];
+const COLORS = ["#2F5D50", "#C0392B", "#5B8C7B", "#7A7A8C"];
 
 const ProgressAnalytics = () => {
   const [analytics, setAnalytics] = useState({
@@ -159,7 +159,7 @@ const ProgressAnalytics = () => {
         </div>
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-semibold mb-2">Study Hours</h3>
-          <div className="text-3xl font-bold text-purple-600">
+          <div className="text-3xl font-bold text-amber-600">
             {analytics.studyHours} hrs
           </div>
         </div>
@@ -184,8 +184,8 @@ const ProgressAnalytics = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="strong" name="Strong Topics" fill="#6a11cb" />
-                <Bar dataKey="weak" name="Weak Topics" fill="#2575fc" />
+                <Bar dataKey="strong" name="Strong Topics" fill="#2F5D50" />
+                <Bar dataKey="weak" name="Weak Topics" fill="#C0392B" />
               </BarChart>
             </ResponsiveContainer>
           </div>

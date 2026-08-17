@@ -163,12 +163,12 @@ export default function Planner() {
   const displayedPercentage = serverProgress?.percentage ?? progressPercentage;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 p-8">
+    <div className="min-h-screen bg-sky-50 p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Page Title + Button */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold text-sky-800">
               2-Week Smart Study Planner
             </h1>
             <p className="text-gray-600 mt-2 font-medium">
@@ -179,26 +179,26 @@ export default function Planner() {
 
           <button
             onClick={() => setShowForm(!showForm)}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold"
+            className="bg-sky-600 hover:bg-sky-700 text-white px-6 py-3 rounded-xl hover:shadow-lg transition font-semibold"
           >
             ➕ Add Plan
           </button>
         </div>
 
         {/* Progress Bar */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-purple-100">
+        <div className="bg-white rounded-2xl shadow-sm p-6 border border-sky-200">
           <div className="flex justify-between text-sm font-semibold text-gray-700 mb-3">
             <span className="flex items-center gap-2">
               <span className="text-xl">🎯</span>
               Overall Progress
             </span>
-            <span className="text-purple-600 text-lg">
+            <span className="text-sky-600 text-lg">
               {displayedPercentage.toFixed(0)}%
             </span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-4 shadow-inner">
             <div
-              className="bg-gradient-to-r from-blue-600 to-purple-600 h-4 rounded-full transition-all duration-500 shadow-sm"
+              className="bg-sky-600 h-4 rounded-full transition-all duration-500 shadow-sm"
               style={{ width: `${displayedPercentage}%` }}
             ></div>
           </div>
@@ -206,7 +206,7 @@ export default function Planner() {
 
         {/* Add/Edit Plan Form */}
         {showForm && (
-          <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-200 space-y-5 animate-in">
+          <div className="bg-white rounded-2xl shadow-xl p-8 border border-sky-200 space-y-5 animate-in">
             <h3 className="text-xl font-bold text-gray-800 flex items-center gap-2">
               {editIndex !== null ? "✏️ Edit Plan" : "➕ Add New Plan"}
             </h3>
@@ -214,7 +214,7 @@ export default function Planner() {
             <input
               type="text"
               placeholder="Day (e.g. Day 15)"
-              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-purple-500 focus:outline-none transition-colors"
+              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-sky-500 focus:outline-none transition-colors"
               value={newPlan.day}
               onChange={(e) => setNewPlan({ ...newPlan, day: e.target.value })}
             />
@@ -222,7 +222,7 @@ export default function Planner() {
             <input
               type="text"
               placeholder="Subject (e.g. Physics)"
-              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-purple-500 focus:outline-none transition-colors"
+              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-sky-500 focus:outline-none transition-colors"
               value={newPlan.subject}
               onChange={(e) => setNewPlan({ ...newPlan, subject: e.target.value })}
             />
@@ -230,7 +230,7 @@ export default function Planner() {
             <input
               type="text"
               placeholder="Task Description"
-              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-purple-500 focus:outline-none transition-colors"
+              className="border-2 border-gray-200 p-3 rounded-xl w-full focus:border-sky-500 focus:outline-none transition-colors"
               value={newPlan.task}
               onChange={(e) => setNewPlan({ ...newPlan, task: e.target.value })}
             />
@@ -238,7 +238,7 @@ export default function Planner() {
             <label className="flex items-center gap-3 text-gray-700 bg-amber-50 p-4 rounded-xl cursor-pointer hover:bg-amber-100 transition-colors border border-amber-200">
               <input
                 type="checkbox"
-                className="w-5 h-5 accent-purple-600 cursor-pointer"
+                className="w-5 h-5 accent-sky-600 cursor-pointer"
                 checked={newPlan.highlight}
                 onChange={(e) =>
                   setNewPlan({
@@ -253,7 +253,7 @@ export default function Planner() {
             <div className="flex gap-3 pt-2">
               <button
                 onClick={addPlan}
-                className="bg-gradient-to-r from-green-500 to-emerald-600 text-white px-6 py-3 rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300 font-semibold flex-1"
+                className="bg-sky-600 hover:bg-sky-700 text-white px-6 py-3 rounded-xl hover:shadow-lg transition font-semibold flex-1"
               >
                 {editIndex !== null ? "💾 Update Plan" : "💾 Save Plan"}
               </button>
@@ -268,7 +268,7 @@ export default function Planner() {
         )}
 
         {/* Planner Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-purple-100">
+        <div className="bg-white rounded-2xl shadow-sm p-8 border border-sky-200">
           <div className="border-b-2 border-gradient pb-4 mb-6">
             <p className="text-gray-700 text-lg flex items-center gap-2 font-medium">
               <span className="text-2xl">🚀</span>
@@ -285,7 +285,7 @@ export default function Planner() {
                   item.completed
                     ? "bg-gradient-to-r from-green-50 to-emerald-50 border-green-300"
                     : item.highlight
-                    ? "bg-gradient-to-r from-blue-50 to-purple-50 border-purple-300"
+                    ? "bg-amber-50/50 border-amber-200"
                     : "bg-white border-gray-200 hover:border-gray-300"
                 }`}
               >
@@ -294,14 +294,14 @@ export default function Planner() {
                     type="checkbox"
                     checked={item.completed}
                     onChange={() => toggleComplete(index)}
-                    className="w-5 h-5 cursor-pointer accent-purple-600"
+                    className="w-5 h-5 cursor-pointer accent-sky-600"
                   />
                   <span
                     className={`font-bold text-lg px-3 py-1 rounded-lg ${
                       item.completed
                         ? "bg-green-100 text-green-700 line-through"
                         : item.highlight
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white"
+                        ? "bg-amber-500 text-white shadow-sm"
                         : "bg-gray-100 text-gray-700"
                     }`}
                   >
@@ -326,13 +326,13 @@ export default function Planner() {
                     </span>
                   )}
                   {item.completed && (
-                    <span className="text-sm font-bold bg-gradient-to-r from-green-500 to-emerald-600 text-white px-3 py-1 rounded-full">
+                    <span className="text-sm font-bold bg-sky-600 text-white px-3 py-1 rounded-full">
                       ✓ Done
                     </span>
                   )}
                   <button
                     onClick={() => editPlan(index)}
-                    className="bg-blue-100 text-blue-700 hover:bg-blue-200 px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
+                    className="bg-sky-100 text-sky-850 hover:bg-sky-200 px-3 py-2 rounded-lg text-sm font-semibold transition-colors"
                     title="Edit"
                   >
                     ✏️

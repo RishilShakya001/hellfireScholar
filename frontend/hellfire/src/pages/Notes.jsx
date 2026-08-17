@@ -163,7 +163,7 @@ const Notes = () => {
         {!isAdding && (
           <button
             onClick={() => setIsAdding(true)}
-            className="bg-blue-600 text-white px-4 py-2 rounded mb-6"
+            className="bg-sky-600 hover:bg-sky-700 text-white px-4 py-2.5 rounded-lg mb-6 font-semibold transition"
           >
             + Add Note
           </button>
@@ -181,7 +181,7 @@ const Notes = () => {
                 onClick={() => setNoteType("pdf")}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
                   noteType === "pdf"
-                    ? "bg-white text-blue-600 shadow-sm"
+                    ? "bg-white text-sky-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-800"
                 }`}
               >
@@ -192,7 +192,7 @@ const Notes = () => {
                 onClick={() => setNoteType("text")}
                 className={`px-4 py-1.5 rounded-md text-sm font-medium transition ${
                   noteType === "text"
-                    ? "bg-white text-blue-600 shadow-sm"
+                    ? "bg-white text-sky-600 shadow-sm"
                     : "text-gray-600 hover:text-gray-800"
                 }`}
               >
@@ -207,7 +207,7 @@ const Notes = () => {
               onChange={(e) =>
                 setFormData({ ...formData, subject: e.target.value })
               }
-              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-sky-500 transition"
             />
 
             <input
@@ -217,7 +217,7 @@ const Notes = () => {
               onChange={(e) =>
                 setFormData({ ...formData, title: e.target.value })
               }
-              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-sky-500 transition"
             />
 
             {noteType === "pdf" ? (
@@ -229,10 +229,10 @@ const Notes = () => {
                 {!formData.pdfFile ? (
                   <label
                     htmlFor="pdf-upload"
-                    className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition"
+                    className="flex flex-col items-center justify-center w-full h-36 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-sky-500 hover:bg-sky-50 transition"
                   >
                     <span className="text-4xl mb-2">📄</span>
-                    <span className="text-blue-600 font-semibold">
+                    <span className="text-sky-600 font-semibold">
                       Click to upload PDF
                     </span>
                     <span className="text-xs text-gray-500 mt-1">
@@ -280,7 +280,7 @@ const Notes = () => {
                   setFormData({ ...formData, content: e.target.value })
                 }
                 rows={6}
-                className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition font-sans"
+                className="w-full p-3 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-sky-500 transition font-sans"
               />
             )}
 
@@ -288,7 +288,7 @@ const Notes = () => {
               <button
                 onClick={handleSaveNote}
                 disabled={loading}
-                className="bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold shadow hover:bg-blue-700 transition"
+                className="bg-sky-600 text-white px-5 py-2 rounded-xl font-semibold shadow hover:bg-sky-700 transition"
               >
                 {loading ? "Saving..." : "Save Note"}
               </button>
@@ -311,7 +311,7 @@ const Notes = () => {
     <select
       value={selectedSubjectId || ""}
       onChange={(e) => setSelectedSubjectId(e.target.value)}
-      className="appearance-none w-full bg-white border border-gray-300 rounded-xl px-4 py-3 pr-10 text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+      className="appearance-none w-full bg-white border border-gray-300 rounded-xl px-4 py-3 pr-10 text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 transition"
     >
       <option value="">Choose a subject</option>
       {subjects.map((s) => (
@@ -376,14 +376,14 @@ const Notes = () => {
                   href={note.fileUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium mt-1 text-sm"
+                  className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-medium mt-1 text-sm"
                 >
                   View PDF Resource
                 </a>
               ) : (
                 <button
                   onClick={() => setExpandedNoteId(isExpanded ? null : note._id)}
-                  className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium mt-1 text-sm outline-none"
+                  className="inline-flex items-center gap-1 text-sky-600 hover:text-sky-700 font-medium mt-1 text-sm outline-none"
                 >
                   {isExpanded ? "Hide Note Content" : "Show Note Content"}
                 </button>
