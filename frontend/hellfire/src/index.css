@@ -2,17 +2,41 @@
 @import "tailwindcss";
 
 @theme {
-  /* Calming Focus Eucalyptus/Sage Theme for Study (replaces harsh blues) */
-  --color-sky-50: #fcfcf9;     /* Warm paper/ivory background */
-  --color-sky-100: #f1f3ec;    /* Soft warm off-white border */
-  --color-sky-200: #e2e5da;    /* Soft eucalyptus border line */
-  --color-sky-300: #ccd1be;    /* Calming grey-green */
-  --color-sky-400: #9cb09b;    /* Light Sage */
-  --color-sky-500: #587f71;    /* Calming Eucalyptus Forest (Primary Accent) */
-  --color-sky-600: #446459;    /* Forest Active Button */
-  --color-sky-700: #334b42;    /* Dark Forest hover link */
-  --color-sky-800: #22332c;    /* Deep Forest headings (high legibility, low strain) */
-  --color-sky-900: #15201b;    /* Deep charcoal forest body */
+  /* Calming Focus Eucalyptus/Sage Theme for Study */
+  --color-sky-50: #FAF7F0;     /* App Background */
+  --color-sky-100: #F2EFE8;    /* Active navigation background */
+  --color-sky-200: #E5E2D6;    /* Border line color */
+  --color-sky-300: #D8D4C8;
+  --color-sky-400: #9CB09B;    
+  --color-sky-500: #5B8C7B;    /* Secondary accent (Lighter Sage) */
+  --color-sky-600: #2F5D50;    /* Primary accent (Forest Green) */
+  --color-sky-700: #23463C;    /* Muted dark forest hover */
+  --color-sky-800: #1C372F;    
+  --color-sky-900: #2B2B2B;    /* Text primary */
+
+  /* Text Overrides for Calming Contrast */
+  --color-slate-900: #2B2B2B;  /* Text primary */
+  --color-slate-800: #2B2B2B;  
+  --color-slate-700: #2B2B2B;  
+  --color-gray-900: #2B2B2B;   
+  --color-gray-800: #2B2B2B;   
+  --color-gray-700: #2B2B2B;   
+
+  --color-slate-500: #7A7A8C;  /* Text secondary */
+  --color-slate-400: #7A7A8C;  
+  --color-gray-500: #7A7A8C;   
+  --color-gray-400: #7A7A8C;   
+
+  /* Destructive Overrides (Muted Red, not neon) */
+  --color-red-500: #C0392B;    
+  --color-red-600: #C0392B;    
+  --color-red-700: #A82F22;    
+  --color-red-800: #90261A;    
+
+  /* Success Checkbox Overrides */
+  --color-emerald-500: #4CAF50; 
+  --color-emerald-600: #4CAF50; 
+  --color-emerald-700: #3E8E41; 
 
   /* Customize Font Family for Premium Academic Feel */
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
@@ -21,7 +45,7 @@
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-sky-900);
+  color: #2B2B2B;
   background-color: var(--color-sky-50);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -29,6 +53,7 @@ body {
 
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-display);
+  color: #2B2B2B;
   font-weight: 700;
   letter-spacing: -0.02em;
 }
