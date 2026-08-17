@@ -1,1 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
+
+@theme {
+  /* Calming Focus Eucalyptus/Sage Theme for Study (replaces harsh blues) */
+  --color-sky-50: #fcfcf9;     /* Warm paper/ivory background */
+  --color-sky-100: #f1f3ec;    /* Soft warm off-white border */
+  --color-sky-200: #e2e5da;    /* Soft eucalyptus border line */
+  --color-sky-300: #ccd1be;    /* Calming grey-green */
+  --color-sky-400: #9cb09b;    /* Light Sage */
+  --color-sky-500: #587f71;    /* Calming Eucalyptus Forest (Primary Accent) */
+  --color-sky-600: #446459;    /* Forest Active Button */
+  --color-sky-700: #334b42;    /* Dark Forest hover link */
+  --color-sky-800: #22332c;    /* Deep Forest headings (high legibility, low strain) */
+  --color-sky-900: #15201b;    /* Deep charcoal forest body */
+
+  /* Customize Font Family for Premium Academic Feel */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-sky-900);
+  background-color: var(--color-sky-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
